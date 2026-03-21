@@ -1,34 +1,39 @@
-// 1. Cargamos la configuración del archivo .env
 require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
 const { Sequelize } = require("sequelize");
 
-// 2. Creamos la conexión usando la URL que pegaste en el .env
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Configuración de la base de datos
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: "postgres",
-  logging: false, // Esto es para que no nos llene la consola de mensajes raros de SQL
+  logging: false,
 });
 
-// 3. Función asíncrona para probar la conexión
-async function probarConexion() {
-  console.log("🔄 Intentando conectar con Supabase...");
+// Middlewares
+app.use(cors()); // Permite que React (puerto 5173) hable con Node (puerto 3000)
+app.use(express.json());
 
+// Ruta de estado para el Frontend
+app.get("/api/status", async (req, res) => {
   try {
-    // El método .authenticate() es el que hace la magia
     await sequelize.authenticate();
-    console.log(
-      "✅ ¡BRUTAL! La conexión funciona. El servidor y la base de datos se entienden perfectamente.",
-    );
+    res.json({
+      status: "ok",
+      message:
+        "Servidor de CentralTicket funcionando y Base de Datos conectada",
+    });
   } catch (error) {
-    console.error("❌ Vaya, algo ha fallado en la conexión:", error.message);
-    console.log(
-      "\n💡 Consejo: Revisa que la contraseña en el .env sea correcta y que no tenga caracteres raros sin escapar.",
-    );
-  } finally {
-    // Cerramos la conexión para que el script termine
-    await sequelize.close();
-    process.exit();
+    res
+      .status(500)
+      .json({ status: "error", message: "Fallo de conexión con la BD" });
   }
-}
+});
 
-// Ejecutamos la prueba
-probarConexion();
+app.listen(PORT, () => {
+  console.log(
+    `🚀 Servidor de CentralTicket escuchando en http://localhost:${PORT}`,
+  );
+});
