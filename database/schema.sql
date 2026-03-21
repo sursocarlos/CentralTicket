@@ -1,8 +1,11 @@
+-- ============================================================
 -- SCRIPT DE CREACIÓN DE BASE DE DATOS: CENTRAL TICKET
 -- Proyecto Intermodular DAW
 -- Carlos Flores Hernández
+-- ============================================================
 
--- 1. Usuarios (Debe ir primero porque otras tablas dependen de ella)
+-- ── 1. Usuarios ──────────────────────────────────────────────
+-- (Debe ir primero porque otras tablas dependen de ella)
 CREATE TABLE usuarios (
   id SERIAL PRIMARY KEY,
   nombre TEXT NOT NULL,
@@ -12,13 +15,13 @@ CREATE TABLE usuarios (
   fecha_creacion TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. Categorías
+-- ── 2. Categorías ────────────────────────────────────────────
 CREATE TABLE categorias (
   id SERIAL PRIMARY KEY,
   nombre TEXT NOT NULL
 );
 
--- 3. Incidencias (Tickets)
+-- ── 3. Incidencias (Tickets) ─────────────────────────────────
 CREATE TABLE incidencias (
   id SERIAL PRIMARY KEY,
   titulo TEXT NOT NULL,
@@ -32,7 +35,7 @@ CREATE TABLE incidencias (
   fecha_creacion TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 4. Comentarios
+-- ── 4. Comentarios ───────────────────────────────────────────
 CREATE TABLE comentarios (
   id SERIAL PRIMARY KEY,
   contenido TEXT NOT NULL,
@@ -40,3 +43,14 @@ CREATE TABLE comentarios (
   id_usuario INTEGER REFERENCES usuarios(id),
   fecha_creacion TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+
+-- ============================================================
+-- DATOS DE PRUEBA
+-- ============================================================
+
+-- ── Usuarios de prueba (uno por cada rol) ────────────────────
+INSERT INTO usuarios (nombre, email, password, rol) VALUES
+  ('Admin Test',    'admin@centralticket.com',    '1234', 'admin'),
+  ('Tecnico Test',  'tecnico@centralticket.com',  '1234', 'tecnico'),
+  ('Empleado Test', 'empleado@centralticket.com', '1234', 'empleado');

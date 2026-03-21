@@ -1,46 +1,127 @@
+/* ── Reset global ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Labels accesibles visualmente ocultos ── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Variables tema claro ── */
 :root {
-  /* Tema Claro (Suave) */
   --bg-color: #f8fafc;
   --card-bg: rgba(255, 255, 255, 0.7);
   --text-main: #1e293b;
   --text-muted: #64748b;
-  --accent: #6366f1; /* Violeta/Indigo */
+  --accent: #6366f1;
   --accent-hover: #4f46e5;
   --input-bg: #ffffff;
   --border: rgba(226, 232, 240, 0.8);
+  /* FIX 4: status bar con mejor contraste en modo claro */
+  --status-bar-bg: #1e293b;
+  --status-bar-text: #6366f1;
 }
 
+/* ── Variables tema oscuro ── */
 [data-theme='dark'] {
-  /* Tema Oscuro (Elegante) */
-  --bg-color: #0f172a; /* Slate 900 */
+  --bg-color: #0f172a;
   --card-bg: rgba(30, 41, 59, 0.7);
   --text-main: #f1f5f9;
   --text-muted: #94a3b8;
-  --accent: #38bdf8; /* Cian brillante */
+  --accent: #38bdf8;
   --accent-hover: #0ea5e9;
   --input-bg: #1e293b;
   --border: rgba(51, 65, 85, 0.5);
+  --status-bar-bg: #1e293b;
+  --status-bar-text: #38bdf8;
 }
 
-.login-container {
-  min-height: 100vh;
+
+
+[data-theme='light'] .login-container {
+  background-image:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--accent) 50%, transparent), transparent 50%),
+    radial-gradient(circle at bottom left, color-mix(in srgb, var(--accent) 45%, transparent), transparent 50%);
+}
+
+[data-theme='light'] .status-ok {
+  color: #02aa40;
+}
+
+
+/* ── FIX 1: html y body con fondo sólido para evitar flash blanco al hacer zoom ── */
+html, body {
+  background-color: var(--bg-color);
+  min-height: 100%;
+  transition: background-color 0.5s ease;
+}
+
+/* ── Barra de estado ── */
+.status-bar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+  background-color: transparent;  /* ← esto */
+  color: var(--status-bar-text);
+  padding: 8px 16px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: bold;
+  font-family: 'Inter', system-ui, sans-serif;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-color);
-  background: radial-gradient(circle at top right, var(--accent), transparent 40%),
-              radial-gradient(circle at bottom left, var(--accent), transparent 40%);
-  transition: all 0.5s ease;
-  font-family: 'Inter', system-ui, sans-serif;
+  gap: 6px;
 }
 
+.status-loading { color: var(--text-muted); }
+.status-ok      { color: #4ade80; }
+.status-error   { color: #f87171; }
+
+/* ── Wrapper que empuja el contenido bajo la barra fija ── */
+.page-wrapper {
+  min-height: 100vh;
+  background-color: var(--bg-color);
+  transition: background-color 0.5s ease;
+}
+
+/* ── Contenedor del login ── */
+.login-container {
+  min-height: 100vh;
+  padding-top: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-color);
+  background-image:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--accent) 20%, transparent), transparent 50%),
+    radial-gradient(circle at bottom left, color-mix(in srgb, var(--accent) 15%, transparent), transparent 50%);
+  transition: background-color 0.5s ease;
+  font-family: 'Inter', system-ui, sans-serif;
+  padding: 1rem;
+}
+
+/* ── Card del login ── */
 .login-card {
   width: 100%;
   max-width: 400px;
   padding: 2.5rem;
   border-radius: 24px;
   background: var(--card-bg);
-  backdrop-filter: blur(12px); /* Efecto Glassmorphism */
+  backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -48,17 +129,48 @@
   position: relative;
 }
 
+/* ── Botón tema ── */
 .theme-toggle {
   position: absolute;
   top: 1.5rem;
   right: 1.5rem;
   cursor: pointer;
   color: var(--text-muted);
-  transition: transform 0.3s;
+  transition: transform 0.3s, color 0.3s;
+  background: transparent;
+  border: none;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
 }
-
 .theme-toggle:hover { transform: scale(1.1); color: var(--accent); }
 
+/* ── Cabecera ── */
+.login-header { margin-bottom: 2rem; }
+
+.login-icon {
+  color: var(--accent);
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-title {
+  color: var(--text-main);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.login-subtitle {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* ── Selector de rol ── */
 .role-selector {
   display: flex;
   gap: 8px;
@@ -78,14 +190,16 @@
   cursor: pointer;
   font-size: 0.85rem;
   transition: all 0.3s;
+  font-family: inherit;
 }
 
 .role-btn.active {
   background: var(--accent);
   color: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+/* ── Inputs ── */
 .input-group {
   position: relative;
   margin-bottom: 1.2rem;
@@ -99,9 +213,11 @@
   transform: translateY(-50%);
   color: var(--text-muted);
   width: 18px;
+  pointer-events: none;
 }
 
 .login-input {
+  box-sizing: border-box;
   width: 100%;
   padding: 12px 12px 12px 40px;
   background: var(--input-bg);
@@ -110,10 +226,65 @@
   color: var(--text-main);
   outline: none;
   transition: all 0.3s;
+  font-family: inherit;
+  font-size: 0.95rem;
 }
 
-.login-input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+.login-input--password { padding-right: 44px; }
 
+.login-input::placeholder { color: var(--text-muted); }
+
+/* FIX 2: forzar colores correctos cuando el navegador rellena el input con autocompletado ── */
+.login-input:-webkit-autofill,
+.login-input:-webkit-autofill:hover,
+.login-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text-main);
+  -webkit-box-shadow: 0 0 0px 1000px var(--input-bg) inset;
+  transition: background-color 5000s ease-in-out 0s;
+  caret-color: var(--text-main);
+}
+
+.login-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+/* ── Ojo de contraseña ── */
+.eye-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 2px;
+  transition: color 0.2s;
+}
+.eye-toggle:hover { color: var(--accent); }
+
+/* ── Mensaje de error ── */
+.login-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: #f87171;
+  font-size: 0.85rem;
+  /* FIX 3: text-align left para que el salto de línea no quede centrado raro ── */
+  text-align: left;
+  margin-top: 0.5rem;
+  padding: 10px 12px;
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  border-radius: 8px;
+  line-height: 1.5;
+}
+
+/* ── Botón principal ── */
 .primary-btn {
   width: 100%;
   padding: 14px;
@@ -122,10 +293,50 @@
   border: none;
   border-radius: 12px;
   font-weight: 600;
+  font-size: 0.95rem;
+  font-family: inherit;
   cursor: pointer;
   transition: all 0.3s;
   margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
-.primary-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
-.primary-btn:active { transform: translateY(0); }
+.primary-btn:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.primary-btn:active  { transform: translateY(0); }
+.primary-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+/* ── Dashboards placeholder ── */
+.dashboard {
+  min-height: calc(100vh - 36px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--text-main);
+  background-color: var(--bg-color);
+}
+
+.dashboard h1 { font-size: 2rem; font-weight: 700; }
+.dashboard p  { color: var(--text-muted); font-size: 1rem; }
+
+.dashboard-icon {
+  color: var(--accent);
+  margin-bottom: 0.5rem;
+}
+
+/* ── Animación spinner ── */
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}

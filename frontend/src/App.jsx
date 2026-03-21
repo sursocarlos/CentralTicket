@@ -1,95 +1,217 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import { Sun, Moon, Mail, Lock, Eye, EyeOff, Ticket } from 'lucide-react';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { Sun, Moon, Mail, Lock, Eye, EyeOff, Ticket, ShieldCheck, Wrench, UserCircle, AlertTriangle, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import axios from 'axios';
 import './Login.css';
 
-// 1. COMPONENTE DE LOGIN (La interfaz moderna)
+// ── Páginas placeholder por rol ─────────────────────────────────
+
+function DashboardAdmin() {
+  return (
+    <div className="dashboard">
+      <ShieldCheck size={48} className="dashboard-icon" />
+      <h1>Panel de Administrador</h1>
+      <p>Bienvenido al panel de administración de CentralTicket.</p>
+    </div>
+  );
+}
+
+function DashboardTecnico() {
+  return (
+    <div className="dashboard">
+      <Wrench size={48} className="dashboard-icon" />
+      <h1>Panel de Técnico</h1>
+      <p>Bienvenido al panel de técnico de CentralTicket.</p>
+    </div>
+  );
+}
+
+function DashboardEmpleado() {
+  return (
+    <div className="dashboard">
+      <UserCircle size={48} className="dashboard-icon" />
+      <h1>Panel de Empleado</h1>
+      <p>Bienvenido al panel de empleado de CentralTicket.</p>
+    </div>
+  );
+}
+
+// ── Componente de Login ─────────────────────────────────────────
+
 function Login() {
   const [isDark, setIsDark] = useState(true);
   const [showPass, setShowPass] = useState(false);
-  const [role, setRole] = useState('empleado');
+  const [role, setRole] = useState('admin');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
   }, [isDark]);
 
+  const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (!email.trim()) {
+      setError('Por favor, introduce tu correo corporativo.');
+      return;
+    }
+    if (!isValidEmail(email)) {
+      setError('El formato del correo no es válido.');
+      return;
+    }
+    if (!password.trim()) {
+      setError('Por favor, introduce tu contraseña.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await axios.post('http://localhost:3000/api/login', { email, password });
+      const { rol } = res.data.usuario;
+
+      if (rol !== role) {
+        setError(`Este usuario no es ${role}.\nSelecciona el rol correcto.`);
+        setLoading(false);
+        return;
+      }
+
+      if (rol === 'admin') navigate('/dashboard/admin');
+      else if (rol === 'tecnico') navigate('/dashboard/tecnico');
+      else navigate('/dashboard/empleado');
+
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Error al conectar con el servidor.';
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="login-container">
       <div className="login-card">
-        <div className="theme-toggle" onClick={() => setIsDark(!isDark)}>
-          {isDark ? <Sun size={20} /> : <Moon size={20} />}
-        </div>
 
-        <div style={{ marginBottom: '2rem' }}>
-          <div style={{ color: 'var(--accent)', marginBottom: '1rem' }}>
-            <Ticket size={40} strokeWidth={1.5} style={{ margin: '0 auto' }} />
+        <button
+          className="theme-toggle"
+          onClick={() => setIsDark(!isDark)}
+          aria-label="Cambiar tema"
+        >
+          {isDark ? <Sun size={20} /> : <Moon size={20} />}
+        </button>
+
+        <div className="login-header">
+          <div className="login-icon">
+            <Ticket size={40} strokeWidth={1.5} />
           </div>
-          <h2 style={{ color: 'var(--text-main)', margin: '0 0 0.5rem 0' }}>CentralTicket</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Accede a tu panel de gestión</p>
+          <h2 className="login-title">CentralTicket</h2>
+          <p className="login-subtitle">Accede a tu panel de gestión</p>
         </div>
 
         <div className="role-selector">
           {['admin', 'tecnico', 'empleado'].map((r) => (
-            <button 
+            <button
               key={r}
               className={`role-btn ${role === r ? 'active' : ''}`}
-              onClick={() => setRole(r)}
+              onClick={() => { setRole(r); setError(''); }}
             >
               {r.charAt(0).toUpperCase() + r.slice(1)}
             </button>
           ))}
         </div>
 
-        <form onSubmit={(e) => e.preventDefault()}>
+        <form onSubmit={handleLogin} noValidate>
           <div className="input-group">
-            <Mail className="input-icon" />
-            <input type="email" className="login-input" placeholder="Correo corporativo" />
+            <label htmlFor="email" className="sr-only">Correo corporativo</label>
+            <Mail className="input-icon" aria-hidden="true" />
+            <input
+              id="email"
+              type="email"
+              className="login-input"
+              placeholder="Correo corporativo"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => { setEmail(e.target.value); setError(''); }}
+            />
           </div>
 
           <div className="input-group">
-            <Lock className="input-icon" />
-            <input type={showPass ? "text" : "password"} className="login-input" placeholder="Contraseña" />
-            <div 
-              style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: 'var(--text-muted)' }}
+            <label htmlFor="password" className="sr-only">Contraseña</label>
+            <Lock className="input-icon" aria-hidden="true" />
+            <input
+              id="password"
+              type={showPass ? 'text' : 'password'}
+              className="login-input login-input--password"
+              placeholder="Contraseña"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => { setPassword(e.target.value); setError(''); }}
+            />
+            <button
+              type="button"
+              className="eye-toggle"
               onClick={() => setShowPass(!showPass)}
+              aria-label={showPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}
             >
               {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
-            </div>
+            </button>
           </div>
 
-          <button className="primary-btn">Entrar como {role}</button>
+          {/* Mensaje de error estilizado con icono Lucide */}
+          {error && (
+            <div className="login-error" role="alert">
+              <AlertTriangle size={15} style={{ flexShrink: 0, marginTop: '12px', marginRight: '2px'}} />
+              <span style={{ whiteSpace: 'pre-line' }}>{error}</span>
+            </div>
+          )}
+
+          <button type="submit" className="primary-btn" disabled={loading}>
+            {loading
+              ? <><Loader2 size={16} className="spin" /> Entrando...</>
+              : `Entrar como ${role}`
+            }
+          </button>
         </form>
+
       </div>
     </div>
   );
 }
 
-// 2. COMPONENTE PRINCIPAL (El que organiza todo)
+// ── Componente Principal ────────────────────────────────────────
+
 function App() {
-  const [status, setStatus] = useState('⏳ Conectando...');
+  const [status, setStatus] = useState(null); // null = cargando
 
   useEffect(() => {
     axios.get('http://localhost:3000/api/status')
-      .then(res => setStatus(`✅ ${res.data.message}`))
-      .catch(() => setStatus('❌ Error: Backend desconectado'));
+      .then(res => setStatus({ ok: true, msg: res.data.message }))
+      .catch(() => setStatus({ ok: false, msg: 'Backend desconectado' }));
   }, []);
 
   return (
     <Router>
-      {/* Barra de estado superior */}
-      <div style={{ 
-        position: 'fixed', top: 0, width: '100%', zIndex: 1000,
-        backgroundColor: '#1e293b', color: '#38bdf8', 
-        padding: '8px', textAlign: 'center', fontSize: '12px', fontWeight: 'bold' 
-      }}>
-        {status}
+      <div className={`status-bar ${status ? (status.ok ? 'status-ok' : 'status-error') : 'status-loading'}`}>
+        {!status && <><Loader2 size={13} className="spin" /> Conectando...</>}
+        {status?.ok  && <><CheckCircle2 size={13} /> {status.msg}</>}
+        {status && !status.ok && <><XCircle size={13} /> {status.msg}</>}
       </div>
-
-      <Routes>
-        <Route path="/" element={<Login />} />
-        {/* Aquí podrías añadir más rutas mañana */}
-      </Routes>
+      <div className="page-wrapper">
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/dashboard/admin"    element={<DashboardAdmin />} />
+          <Route path="/dashboard/tecnico"  element={<DashboardTecnico />} />
+          <Route path="/dashboard/empleado" element={<DashboardEmpleado />} />
+        </Routes>
+      </div>
     </Router>
   );
 }
