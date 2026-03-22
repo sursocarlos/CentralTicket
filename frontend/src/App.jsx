@@ -168,7 +168,7 @@ function Login() {
           {/* Mensaje de error estilizado con icono Lucide */}
           {error && (
             <div className="login-error" role="alert">
-              <AlertTriangle size={15} style={{ flexShrink: 0, marginTop: '12px', marginRight: '2px'}} />
+              <AlertTriangle size={15} style={{ flexShrink: 0, marginTop: '3px', marginRight: '0px'}} />
               <span style={{ whiteSpace: 'pre-line' }}>{error}</span>
             </div>
           )}
