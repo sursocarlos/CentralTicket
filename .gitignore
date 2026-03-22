@@ -15,3 +15,9 @@ dev-dist
 # Archivos de sistema
 .DS_Store
 Thumbs.db
+
+# Lanzar proyecto
+docs/run.md
+
+# Subir los cambios a GitHub
+docs/git.md
