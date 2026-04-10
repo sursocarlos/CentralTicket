@@ -588,3 +588,216 @@ html, body {
     justify-content: center;
   }
 }
+
+
+
+
+
+
+
+
+
+/* ── NUEVOOO ── */
+.tab-navigation {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 2rem;
+  padding: 6px;
+  background: var(--card-bg);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: fit-content;
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.tab-btn:hover {
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--accent);
+}
+
+.tab-btn.active {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+/* ── Mejoras en Tablas y Elementos Visuales ── */
+.id-badge {
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--accent);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-family: monospace;
+}
+
+.status-chip {
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid transparent;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.status-chip.active {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+.status-chip.inactive {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+/* ── Grid de Categorías ── */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin-top: 1.5rem;
+}
+
+.category-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: transform 0.2s;
+}
+
+.category-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+
+.category-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.category-name {
+  font-size: 0.9rem;
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+.config-form {
+  max-width: 500px;
+}
+
+/* ── Animación suave ── */
+.animate-fade {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Ajuste responsive para móviles */
+@media (max-width: 600px) {
+  .tab-navigation {
+    width: 100%;
+    overflow-x: auto;
+    padding: 4px;
+  }
+  .tab-btn span { display: none; }
+  .tab-btn { padding: 12px; }
+}
+
+/* ── AJUSTE 1: Reset de altura total para evitar espacios arriba ── */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.page-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column; /* Permite que el contenido fluya hacia abajo */
+  background-color: var(--bg-color);
+  transition: background-color 0.5s ease;
+}
+
+/* ── AJUSTE 2: AppShell como contenedor principal a pantalla completa ── */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.app-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  z-index: 100;
+}
+
+/* ── AJUSTE 3: Expandir el ancho de los Dashboards ── */
+.dashboard-content {
+  flex: 1; /* Ocupa todo el alto restante */
+  width: 100%;
+  max-width: 1400px; /* Ancho máximo amplio para pantallas grandes */
+  margin: 0 auto; /* Centrado horizontal */
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+/* Forzar que los paneles ocupen el 100% del ancho de su contenedor */
+.dashboard-content .panel {
+  width: 100% !important; 
+  max-width: none !important; /* Elimina restricciones de ancho tipo 'login' */
+  margin-bottom: 1.5rem;
+  box-sizing: border-box;
+}
+
+/* Grid de estadísticas más amplio */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+}
+
+/* Asegurar que las tablas ocupen todo el ancho */
+.table-wrap {
+  width: 100%;
+  overflow-x: auto; /* Scroll horizontal si la pantalla es muy pequeña */
+}
+
+.simple-table {
+  width: 100%;
+  border-collapse: collapse;
+}

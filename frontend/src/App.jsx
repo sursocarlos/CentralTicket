@@ -291,6 +291,7 @@ function DashboardTecnico({ token, usuario }) {
 }
 
 function DashboardAdmin({ token }) {
+  const [activeTab, setActiveTab] = useState("stats");
   const [stats, setStats] = useState(null);
   const [usuarios, setUsuarios] = useState([]);
   const [categorias, setCategorias] = useState([]);
@@ -326,6 +327,7 @@ function DashboardAdmin({ token }) {
     try {
       await apiPut(`/usuarios/${u.id}`, token, { rol: u.rol, activo: u.activo });
       await cargarTodo();
+      // Opcional: añadir una notificación de éxito visual
     } catch (err) {
       setError(err.response?.data?.error || "No se pudo actualizar usuario.");
     }
@@ -352,86 +354,149 @@ function DashboardAdmin({ token }) {
     }
   };
 
+  // Filtrado de seguridad: solo mostramos técnicos y empleados para gestión 
+  const usuariosGestionables = usuarios.filter(u => u.rol !== "admin");
+
   return (
-    <div className="dashboard-content">
-      <section className="panel">
-        <h2 className="section-title"><BarChart3 size={18} /> Estadísticas</h2>
-        <div className="kpi-grid">
-          <article className="kpi-item"><strong>Total</strong><span>{stats?.total ?? "-"}</span></article>
-          <article className="kpi-item"><strong>Abiertas</strong><span>{stats?.abiertas ?? "-"}</span></article>
-          <article className="kpi-item"><strong>En proceso</strong><span>{stats?.proceso ?? "-"}</span></article>
-          <article className="kpi-item"><strong>Resueltas</strong><span>{stats?.resueltas ?? "-"}</span></article>
+    <div className="dashboard-content admin-layout animate-fade">
+      {/* Navegación por pestañas coherente con el estilo de la App  */}
+      <nav className="tab-navigation">
+        <button 
+          className={`tab-btn ${activeTab === "stats" ? "active" : ""}`} 
+          onClick={() => setActiveTab("stats")}
+        >
+          <BarChart3 size={18} /> <span>Estadísticas</span>
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === "users" ? "active" : ""}`} 
+          onClick={() => setActiveTab("users")}
+        >
+          <Users size={18} /> <span>Usuarios</span>
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === "tickets" ? "active" : ""}`} 
+          onClick={() => setActiveTab("tickets")}
+        >
+          <Settings size={18} /> <span>Reasignar</span>
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === "config" ? "active" : ""}`} 
+          onClick={() => setActiveTab("config")}
+        >
+          <FolderOpen size={18} /> <span>Configuración</span>
+        </button>
+      </nav>
+
+      {activeTab === "stats" && (
+        <section className="panel animate-fade">
+          <h2 className="section-title">Resumen Operativo</h2>
+          <div className="kpi-grid">
+            <article className="kpi-item"><strong>Total</strong><span>{stats?.total ?? "0"}</span></article>
+            <article className="kpi-item"><strong>Abiertas</strong><span>{stats?.abiertas ?? "0"}</span></article>
+            <article className="kpi-item"><strong>En proceso</strong><span>{stats?.proceso ?? "0"}</span></article>
+            <article className="kpi-item"><strong>Resueltas</strong><span>{stats?.resueltas ?? "0"}</span></article>
+          </div>
+        </section>
+      )}
+
+      {activeTab === "users" && (
+        <section className="panel animate-fade">
+          <h2 className="section-title">Gestión de Personal</h2>
+          <div className="table-wrap">
+            <table className="simple-table">
+              <thead>
+                <tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr>
+              </thead>
+              <tbody>
+                {usuariosGestionables.map((u) => (
+                  <tr key={u.id}>
+                    <td>{u.nombre}</td>
+                    <td>{u.email}</td>
+                    <td>
+                      <select 
+                        className="simple-input" 
+                        value={u.rol} 
+                        onChange={(e) => setUsuarios(prev => prev.map(x => x.id === u.id ? {...x, rol: e.target.value} : x))}
+                      >
+                        <option value="tecnico">Técnico</option>
+                        <option value="empleado">Empleado</option>
+                      </select>
+                    </td>
+                    <td>
+                      <button 
+                        className={`status-chip ${u.activo ? 'active' : 'inactive'}`}
+                        onClick={() => setUsuarios(prev => prev.map(x => x.id === u.id ? {...x, activo: !u.activo} : x))}
+                      >
+                        {u.activo ? "Activo" : "Inactivo"}
+                      </button>
+                    </td>
+                    <td><button className="primary-btn compact-btn" onClick={() => guardarUsuario(u)}>Guardar</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {activeTab === "tickets" && (
+        <section className="panel animate-fade">
+          <h2 className="section-title">Control de Asignaciones</h2>
+          <div className="table-wrap">
+            <table className="simple-table">
+              <thead><tr><th>ID</th><th>Título</th><th>Técnico Responsable</th></tr></thead>
+              <tbody>
+                {incidencias.map((i) => (
+                  <tr key={i.id}>
+                    <td><span className="id-badge">#{i.id}</span></td>
+                    <td>{i.titulo}</td>
+                    <td>
+                      <select
+                        className="simple-input"
+                        value={i.id_tecnico || ""}
+                        onChange={(e) => asignarTecnico(i.id, e.target.value)}
+                      >
+                        <option value="">Sin asignar</option>
+                        {tecnicos.map((t) => <option key={t.id} value={t.id}>{t.nombre}</option>)}
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {activeTab === "config" && (
+        <section className="panel animate-fade">
+          <h2 className="section-title">Gestión de Categorías</h2>
+          <form onSubmit={crearCategoria} className="inline-form config-form">
+            <input 
+              className="simple-input" 
+              placeholder="Nueva categoría (ej. Redes, Software...)" 
+              value={nuevaCategoria.nombre} 
+              onChange={(e) => setNuevaCategoria({ ...nuevaCategoria, nombre: e.target.value })} 
+            />
+            <button className="primary-btn compact-btn">Añadir</button>
+          </form>
+          <div className="category-grid">
+            {categorias.map((c) => (
+              <div key={c.id} className="category-card animate-fade">
+                <span className="category-dot" style={{ backgroundColor: c.color }}></span>
+                <span className="category-name">{c.nombre}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {error && (
+        <div className="login-error admin-error">
+          <AlertTriangle size={15} />
+          <span>{error}</span>
         </div>
-      </section>
-
-      <section className="panel">
-        <h2 className="section-title"><Users size={18} /> Gestión de usuarios</h2>
-        <div className="table-wrap">
-          <table className="simple-table">
-            <thead><tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Activo</th><th></th></tr></thead>
-            <tbody>
-              {usuarios.map((u) => (
-                <tr key={u.id}>
-                  <td>{u.nombre}</td>
-                  <td>{u.email}</td>
-                  <td>
-                    <select className="simple-input" value={u.rol} onChange={(e) => setUsuarios((prev) => prev.map((x) => x.id === u.id ? { ...x, rol: e.target.value } : x))}>
-                      <option value="admin">Admin</option>
-                      <option value="tecnico">Técnico</option>
-                      <option value="empleado">Empleado</option>
-                    </select>
-                  </td>
-                  <td>
-                    <input type="checkbox" checked={u.activo} onChange={(e) => setUsuarios((prev) => prev.map((x) => x.id === u.id ? { ...x, activo: e.target.checked } : x))} />
-                  </td>
-                  <td><button className="secondary-btn" onClick={() => guardarUsuario(u)}>Guardar</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section className="panel">
-        <h2 className="section-title"><FolderOpen size={18} /> Categorías</h2>
-        <form onSubmit={crearCategoria} className="inline-form">
-          <input className="simple-input" placeholder="Nombre de categoría" value={nuevaCategoria.nombre} onChange={(e) => setNuevaCategoria({ ...nuevaCategoria, nombre: e.target.value })} />
-          <input className="simple-input" type="color" value={nuevaCategoria.color} onChange={(e) => setNuevaCategoria({ ...nuevaCategoria, color: e.target.value })} />
-          <button className="primary-btn compact-btn">Crear</button>
-        </form>
-        <ul className="simple-list">
-          {categorias.map((c) => <li key={c.id}>{c.nombre}</li>)}
-        </ul>
-      </section>
-
-      <section className="panel">
-        <h2 className="section-title"><Settings size={18} /> Reasignar tickets</h2>
-        <div className="table-wrap">
-          <table className="simple-table">
-            <thead><tr><th>ID</th><th>Título</th><th>Técnico</th></tr></thead>
-            <tbody>
-              {incidencias.map((i) => (
-                <tr key={i.id}>
-                  <td>{i.id}</td>
-                  <td>{i.titulo}</td>
-                  <td>
-                    <select
-                      className="simple-input"
-                      value={i.id_tecnico || ""}
-                      onChange={(e) => asignarTecnico(i.id, e.target.value)}
-                    >
-                      <option value="">Sin asignar</option>
-                      {tecnicos.map((t) => <option key={t.id} value={t.id}>{t.nombre}</option>)}
-                    </select>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {error && <p className="text-error">{error}</p>}
+      )}
     </div>
   );
 }
@@ -517,6 +582,7 @@ function Login({ isDark, setIsDark, onLogin }) {
   );
 }
 
+/*
 function AppShell({ session, isDark, setIsDark, onLogout }) {
   const { usuario, token } = session;
   return (
@@ -540,6 +606,33 @@ function AppShell({ session, isDark, setIsDark, onLogout }) {
       {usuario.rol === "empleado" && <DashboardEmpleado token={token} usuario={usuario} />}
       {usuario.rol === "tecnico" && <DashboardTecnico token={token} usuario={usuario} />}
       {usuario.rol === "admin" && <DashboardAdmin token={token} />}
+    </div>
+  );
+}
+*/
+function AppShell({ session, isDark, setIsDark, onLogout }) {
+  const { usuario, token } = session;
+  return (
+    <div className="app-shell animate-fade">
+      <header className="app-header">
+        <div className="app-title">
+          {roleIcon[usuario.rol]} <strong>CentralTicket - {usuario.rol.toUpperCase()}</strong>
+        </div>
+        <div className="inline-form">
+          <span className="user-name">{usuario.nombre}</span>
+          <button className="theme-toggle app-theme-toggle" onClick={() => setIsDark(!isDark)}>
+            {isDark ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+          <button className="secondary-btn danger-btn" onClick={onLogout}>Salir</button>
+        </div>
+      </header>
+      
+      {/* El dashboard correspondiente ahora ocupará el espacio central expandido */}
+      <main className="main-container">
+        {usuario.rol === "empleado" && <DashboardEmpleado token={token} usuario={usuario} />}
+        {usuario.rol === "tecnico" && <DashboardTecnico token={token} usuario={usuario} />}
+        {usuario.rol === "admin" && <DashboardAdmin token={token} />}
+      </main>
     </div>
   );
 }
