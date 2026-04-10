@@ -1,91 +1,92 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const { Sequelize, DataTypes } = require("sequelize");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+const { testConnection, syncDatabase } = require("./models");
+
+const authRoutes = require("./routes/auth");
+const usuariosRoutes = require("./routes/usuarios");
+const categoriasRoutes = require("./routes/categorias");
+const incidenciasRoutes = require("./routes/incidencias");
+const comentariosRoutes = require("./routes/comentarios");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const allowedOrigin = (process.env.FRONTEND_URL || "http://localhost:5173").replace(
+  /\/$/,
+  "",
+);
 
-// Configuración de la base de datos (Session Pooler para IPv4)
-const sequelize = new Sequelize(process.env.DATABASE_URL, {
-  dialect: "postgres",
-  logging: false,
-  dialectOptions: {
-    ssl: {
-      require: true,
-      rejectUnauthorized: false,
-    },
-  },
+// --- Seguridad: cabeceras HTTP seguras ---
+app.use(helmet());
+
+// --- CORS: solo permite el frontend ---
+app.use(
+  cors({
+    origin: allowedOrigin,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
+
+// --- Rate limiting: máx 100 peticiones por IP cada 15 min ---
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Demasiadas peticiones. Inténtalo más tarde." },
+});
+app.use(limiter);
+
+// --- Rate limiting más estricto para login (evitar fuerza bruta) ---
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: "Demasiados intentos de login. Espera 15 minutos." },
 });
 
-// Modelo de Usuario
-const Usuario = sequelize.define("Usuario", {
-  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  nombre: { type: DataTypes.TEXT, allowNull: false },
-  email: { type: DataTypes.TEXT, allowNull: false, unique: true },
-  password: { type: DataTypes.TEXT, allowNull: false },
-  rol: { type: DataTypes.TEXT, allowNull: false },
-}, {
-  tableName: "usuarios",
-  timestamps: false,
-});
+// --- Body parser ---
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
 
-// Middlewares
-app.use(cors());
-app.use(express.json());
+// --- Rutas ---
+app.use("/api/auth", authLimiter, authRoutes);
+app.use("/api/usuarios", usuariosRoutes);
+app.use("/api/categorias", categoriasRoutes);
+app.use("/api/incidencias", incidenciasRoutes);
+app.use("/api/comentarios", comentariosRoutes);
 
-// ── Ruta de estado ──────────────────────────────────────────────
+// --- Ruta de estado ---
 app.get("/api/status", async (req, res) => {
-  try {
-    await sequelize.authenticate();
-    res.json({ status: "ok", message: "Servidor de CentralTicket funcionando y Base de Datos conectada" });
-  } catch (error) {
-    console.error("Error de BD:", error.message);
-    res.status(500).json({ status: "error", message: error.message });
-  }
+  const dbOk = await testConnection();
+  res.json({
+    status: dbOk ? "ok" : "error",
+    message: dbOk
+      ? "CentralTicket API funcionando correctamente"
+      : "Error de conexión con la base de datos",
+    version: "1.0.0",
+  });
 });
 
-// ── Ruta de Login ───────────────────────────────────────────────
-app.post("/api/login", async (req, res) => {
-  const { email, password } = req.body;
-
-  // Validación básica
-  if (!email || !password) {
-    return res.status(400).json({ status: "error", message: "Email y contraseña son obligatorios" });
-  }
-
-  try {
-    // Buscar usuario por email
-    const usuario = await Usuario.findOne({ where: { email } });
-
-    if (!usuario) {
-      return res.status(401).json({ status: "error", message: "Usuario no encontrado" });
-    }
-
-    // Verificar contraseña (texto plano para el prototipo)
-    if (usuario.password !== password) {
-      return res.status(401).json({ status: "error", message: "Contraseña incorrecta" });
-    }
-
-    // Login correcto — devolver datos del usuario (sin la contraseña)
-    res.json({
-      status: "ok",
-      message: "Login correcto",
-      usuario: {
-        id: usuario.id,
-        nombre: usuario.nombre,
-        email: usuario.email,
-        rol: usuario.rol,
-      },
-    });
-
-  } catch (error) {
-    console.error("Error en login:", error.message);
-    res.status(500).json({ status: "error", message: "Error interno del servidor" });
-  }
+// --- Manejo de rutas no encontradas ---
+app.use((req, res) => {
+  res.status(404).json({ error: "Ruta no encontrada" });
 });
 
-// ── Arranque ────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor de CentralTicket escuchando en http://localhost:${PORT}`);
+// --- Manejo global de errores ---
+app.use((err, req, res, next) => {
+  console.error("Error no controlado:", err);
+  res.status(500).json({ error: "Error interno del servidor" });
 });
+
+// --- Arranque ---
+const startServer = async () => {
+  await syncDatabase();
+  app.listen(PORT, () => {
+    console.log(`🚀 CentralTicket API en http://localhost:${PORT}`);
+  });
+};
+
+startServer();
