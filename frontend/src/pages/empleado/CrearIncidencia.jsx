@@ -51,7 +51,7 @@ export default function CrearIncidencia() {
 
   return (
     <Layout>
-      <div style={{ maxWidth: 600 }}>
+      <div style={{ maxWidth: 2000 }}>
         <div className="page-header">
           <h1>Nueva incidencia</h1>
           <p>Describe el problema con el mayor detalle posible</p>
