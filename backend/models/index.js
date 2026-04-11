@@ -1,6 +1,14 @@
 const { Sequelize } = require("sequelize");
 
-const sequelize = new Sequelize(process.env.DATABASE_URL, {
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  throw new Error(
+    "Falta la variable de entorno DATABASE_URL. Crea un archivo .env en /backend o configúrala en tu entorno antes de arrancar el servidor.",
+  );
+}
+
+const sequelize = new Sequelize(databaseUrl, {
   dialect: "postgres",
   logging: false,
   dialectOptions: {
