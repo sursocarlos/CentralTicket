@@ -138,9 +138,9 @@ export default function DetalleIncidencia() {
                 value={comentario}
                 onChange={e => setComentario(e.target.value)}
                 rows={3}
-                style={{ flex: 1, minHeight: 70 }}
+                style={{ flex: 1, minHeight: 42, maxHeight: 500, height: 42}}
               />
-              <button type="submit" className="btn btn-primary" disabled={sendingComment || !comentario.trim()} style={{ alignSelf: 'flex-end' }}>
+              <button type="submit" className="btn btn-primary" disabled={sendingComment || !comentario.trim()} style={{ alignSelf: 'flex-end', height: 42}}>
                 <Send size={15} /> {sendingComment ? '...' : 'Enviar'}
               </button>
             </form>
