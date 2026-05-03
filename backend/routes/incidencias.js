@@ -16,6 +16,7 @@ router.get("/", verificarToken, async (req, res) => {
 
     const where = {};
     if (rol === "empleado") where.id_creador = id;
+    if (rol === "tecnico") where.id_tecnico = id;
     if (estado) where.estado = estado;
     if (prioridad) where.prioridad = prioridad;
 
