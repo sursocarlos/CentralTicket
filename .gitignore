@@ -24,3 +24,7 @@ docs/git.md
 
 # Carpeta rara que crea VSC
 .vscode
+
+# Backups de la base de datos
+backend/backups/*
+!backend/backups/.gitkeep
