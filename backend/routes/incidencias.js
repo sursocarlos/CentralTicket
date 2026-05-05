@@ -113,6 +113,12 @@ router.get("/:id", verificarToken, async (req, res) => {
         .json({ error: "No tienes permiso para ver esta incidencia." });
     }
 
+    if (rol === "tecnico" && incidencia.id_tecnico !== id) {
+      return res
+        .status(403)
+        .json({ error: "No tienes permiso para ver esta incidencia." });
+    }
+
     res.json(incidencia);
   } catch (error) {
     res.status(500).json({ error: "Error al obtener la incidencia." });
