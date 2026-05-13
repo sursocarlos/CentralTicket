@@ -20,7 +20,7 @@ router.get("/", verificarToken, verificarRol("admin"), async (req, res) => {
   }
 });
 
-// GET /api/usuarios/tecnicos — admin y empleado (para asignar)
+// GET /api/usuarios/tecnicos
 router.get("/tecnicos", verificarToken, async (req, res) => {
   try {
     const tecnicos = await Usuario.findAll({
@@ -33,7 +33,7 @@ router.get("/tecnicos", verificarToken, async (req, res) => {
   }
 });
 
-// PUT /api/usuarios/:id — admin puede editar cualquiera
+// PUT /api/usuarios/:id — editar
 router.put(
   "/:id",
   verificarToken,
@@ -46,9 +46,8 @@ router.put(
   ],
   async (req, res) => {
     const errores = validationResult(req);
-    if (!errores.isEmpty()) {
+    if (!errores.isEmpty())
       return res.status(400).json({ errores: errores.array() });
-    }
 
     try {
       const usuario = await Usuario.findByPk(req.params.id);
@@ -74,7 +73,34 @@ router.put(
   },
 );
 
-// DELETE /api/usuarios/:id — soft delete (desactivar)
+// PATCH /api/usuarios/:id/toggle — activar o desactivar
+router.patch(
+  "/:id/toggle",
+  verificarToken,
+  verificarRol("admin"),
+  async (req, res) => {
+    try {
+      const usuario = await Usuario.findByPk(req.params.id);
+      if (!usuario)
+        return res.status(404).json({ error: "Usuario no encontrado." });
+
+      if (usuario.id === req.usuario.id)
+        return res
+          .status(400)
+          .json({ error: "No puedes desactivarte a ti mismo." });
+
+      await usuario.update({ activo: !usuario.activo });
+      res.json({
+        mensaje: `Usuario ${usuario.activo ? "activado" : "desactivado"} correctamente.`,
+        usuario: usuario.toSafeJSON(),
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Error al cambiar estado del usuario." });
+    }
+  },
+);
+
+// DELETE /api/usuarios/:id — eliminación física permanente
 router.delete(
   "/:id",
   verificarToken,
@@ -85,10 +111,15 @@ router.delete(
       if (!usuario)
         return res.status(404).json({ error: "Usuario no encontrado." });
 
-      await usuario.update({ activo: false });
-      res.json({ mensaje: "Usuario desactivado correctamente." });
+      if (usuario.id === req.usuario.id)
+        return res
+          .status(400)
+          .json({ error: "No puedes eliminarte a ti mismo." });
+
+      await usuario.destroy();
+      res.json({ mensaje: "Usuario eliminado permanentemente." });
     } catch (error) {
-      res.status(500).json({ error: "Error al desactivar usuario." });
+      res.status(500).json({ error: "Error al eliminar usuario." });
     }
   },
 );
