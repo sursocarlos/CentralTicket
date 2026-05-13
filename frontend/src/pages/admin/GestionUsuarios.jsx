@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { UserPlus, X, Pencil, UserX, UserCheck, Trash2, AlertTriangle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { UserPlus, X, Pencil, UserX, UserCheck, Trash2, AlertTriangle, ClipboardList } from 'lucide-react';
 import Layout from '../../components/Layout';
 import api from '../../api';
 
@@ -33,23 +34,20 @@ export default function GestionUsuarios() {
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState('');
   const [success, setSuccess]   = useState('');
-
-  // Modal formulario
   const [modal, setModal]       = useState(false);
   const [form, setForm]         = useState(EMPTY);
   const [editId, setEditId]     = useState(null);
   const [saving, setSaving]     = useState(false);
   const [formError, setFormError] = useState('');
-
-  // Modal confirmación: { type: 'toggle' | 'delete', usuario }
   const [confirm, setConfirm]   = useState(null);
+  const navigate = useNavigate();
 
   const load = async () => {
     try {
       const { data } = await api.get('/usuarios');
       setUsuarios(data);
     } catch {
-      setError('No se pudieron cargar los usuarios. Inténtalo de nuevo.');
+      setError('No se pudieron cargar los usuarios.');
     } finally {
       setLoading(false);
     }
@@ -82,7 +80,7 @@ export default function GestionUsuarios() {
       }
       setModal(false); load();
     } catch (err) {
-      setFormError(err.response?.data?.error || 'Error al guardar. Inténtalo de nuevo.');
+      setFormError(err.response?.data?.error || 'Error al guardar.');
     } finally {
       setSaving(false);
     }
@@ -95,7 +93,7 @@ export default function GestionUsuarios() {
       showSuccess(`Usuario ${u.activo ? 'desactivado' : 'activado'} correctamente.`);
       load();
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al cambiar el estado.');
+      setError(err.response?.data?.error || 'Error al cambiar estado.');
     } finally {
       setConfirm(null);
     }
@@ -108,7 +106,7 @@ export default function GestionUsuarios() {
       showSuccess(`Usuario "${u.nombre}" eliminado permanentemente.`);
       load();
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al eliminar el usuario.');
+      setError(err.response?.data?.error || 'Error al eliminar.');
     } finally {
       setConfirm(null);
     }
@@ -132,16 +130,8 @@ export default function GestionUsuarios() {
         </button>
       </div>
 
-      {error   && (
-        <div className="alert alert-error" onClick={() => setError('')} style={{ cursor: 'pointer', marginBottom: '1rem' }}>
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="alert alert-success" onClick={() => setSuccess('')} style={{ cursor: 'pointer', marginBottom: '1rem' }}>
-          {success}
-        </div>
-      )}
+      {error   && <div className="alert alert-error"   onClick={() => setError('')}  style={{ cursor: 'pointer', marginBottom: '1rem' }}>{error}</div>}
+      {success && <div className="alert alert-success" onClick={() => setSuccess('')} style={{ cursor: 'pointer', marginBottom: '1rem' }}>{success}</div>}
 
       {loading ? (
         <div className="loading-center"><div className="spinner" /></div>
@@ -177,6 +167,14 @@ export default function GestionUsuarios() {
                     <div style={{ display: 'flex', gap: 4 }} onClick={e => e.stopPropagation()}>
                       <button
                         className="btn btn-ghost btn-sm"
+                        style={{ color: 'var(--accent)' }}
+                        onClick={() => navigate(`/admin/usuarios/${u.id}/incidencias`)}
+                        title="Ver incidencias"
+                      >
+                        <ClipboardList size={14} />
+                      </button>
+                      <button
+                        className="btn btn-ghost btn-sm"
                         onClick={() => openEdit(u)}
                         title="Editar"
                       >
@@ -207,7 +205,6 @@ export default function GestionUsuarios() {
         </div>
       )}
 
-      {/* Modal formulario crear/editar */}
       {modal && (
         <div className="modal-overlay" onClick={() => setModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -245,9 +242,7 @@ export default function GestionUsuarios() {
                 </select>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setModal(false)}>
-                  Cancelar
-                </button>
+                <button type="button" className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button>
                 <button type="submit" className="btn btn-primary" disabled={saving}>
                   {saving ? 'Guardando...' : 'Guardar'}
                 </button>
@@ -257,14 +252,12 @@ export default function GestionUsuarios() {
         </div>
       )}
 
-      {/* Modal confirmación desactivar/activar */}
       {confirm?.type === 'toggle' && (
         <ConfirmModal
           title={confirm.usuario.activo ? 'Desactivar usuario' : 'Activar usuario'}
-          message={
-            confirm.usuario.activo
-              ? `¿Seguro que quieres desactivar a "${confirm.usuario.nombre}"? No podrá iniciar sesión hasta que lo actives de nuevo.`
-              : `¿Seguro que quieres activar a "${confirm.usuario.nombre}"? Recuperará el acceso al sistema.`
+          message={confirm.usuario.activo
+            ? `¿Seguro que quieres desactivar a "${confirm.usuario.nombre}"? No podrá iniciar sesión hasta que lo actives de nuevo.`
+            : `¿Seguro que quieres activar a "${confirm.usuario.nombre}"? Recuperará el acceso al sistema.`
           }
           confirmLabel={confirm.usuario.activo ? 'Desactivar' : 'Activar'}
           confirmClass={confirm.usuario.activo ? 'btn-danger' : 'btn-primary'}
@@ -273,13 +266,11 @@ export default function GestionUsuarios() {
         />
       )}
 
-      {/* Modal confirmación eliminar */}
       {confirm?.type === 'delete' && (
         <ConfirmModal
           title="Eliminar usuario"
           message={`¿Seguro que quieres eliminar permanentemente a "${confirm.usuario.nombre}"? Esta acción no se puede deshacer.`}
           confirmLabel="Eliminar permanentemente"
-          confirmClass="btn-danger"
           onConfirm={handleDelete}
           onCancel={() => setConfirm(null)}
         />

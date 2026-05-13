@@ -14,34 +14,33 @@ const sequelize = new Sequelize(databaseUrl, {
   dialectOptions: {
     ssl: {
       require: true,
-      rejectUnauthorized: false, // Necesario para Supabase/Render
+      rejectUnauthorized: false,
     },
   },
 });
 
-// Importar modelos
+// ── Importar modelos ─────────────────────────────────────
 const Usuario = require("./usuario")(sequelize);
 const Categoria = require("./Categoria")(sequelize);
 const Incidencia = require("./Incidencia")(sequelize);
 const Comentario = require("./Comentario")(sequelize);
+const HistorialEstado = require("./HistorialEstado")(sequelize);
 
-// --- Asociaciones ---
+// ── Asociaciones ─────────────────────────────────────────
 
-// Un usuario puede crear muchas incidencias
+// Usuario ↔ Incidencia
 Usuario.hasMany(Incidencia, {
   foreignKey: "id_creador",
   as: "incidenciasCreadas",
 });
-Incidencia.belongsTo(Usuario, { foreignKey: "id_creador", as: "creador" });
-
-// Un técnico puede tener muchas incidencias asignadas
 Usuario.hasMany(Incidencia, {
   foreignKey: "id_tecnico",
   as: "incidenciasAsignadas",
 });
+Incidencia.belongsTo(Usuario, { foreignKey: "id_creador", as: "creador" });
 Incidencia.belongsTo(Usuario, { foreignKey: "id_tecnico", as: "tecnico" });
 
-// Una categoría tiene muchas incidencias
+// Categoria ↔ Incidencia
 Categoria.hasMany(Incidencia, {
   foreignKey: "id_categoria",
   as: "incidencias",
@@ -51,7 +50,7 @@ Incidencia.belongsTo(Categoria, {
   as: "categoria",
 });
 
-// Una incidencia tiene muchos comentarios
+// Incidencia ↔ Comentario
 Incidencia.hasMany(Comentario, {
   foreignKey: "id_incidencia",
   as: "comentarios",
@@ -62,11 +61,33 @@ Comentario.belongsTo(Incidencia, {
   as: "incidencia",
 });
 
-// Un usuario tiene muchos comentarios
-Usuario.hasMany(Comentario, { foreignKey: "id_usuario", as: "comentarios" });
+// Usuario ↔ Comentario
+// Alias distinto a "comentarios" para evitar conflicto con Incidencia.hasMany
+Usuario.hasMany(Comentario, {
+  foreignKey: "id_usuario",
+  as: "comentariosEscritos",
+});
 Comentario.belongsTo(Usuario, { foreignKey: "id_usuario", as: "autor" });
 
-// --- Funciones de utilidad ---
+// Incidencia ↔ HistorialEstado
+Incidencia.hasMany(HistorialEstado, {
+  foreignKey: "id_incidencia",
+  as: "historial",
+  onDelete: "CASCADE",
+});
+HistorialEstado.belongsTo(Incidencia, {
+  foreignKey: "id_incidencia",
+  as: "incidencia",
+});
+
+// Usuario ↔ HistorialEstado
+Usuario.hasMany(HistorialEstado, {
+  foreignKey: "id_usuario",
+  as: "historialCambios",
+});
+HistorialEstado.belongsTo(Usuario, { foreignKey: "id_usuario", as: "usuario" });
+
+// ── Funciones de utilidad ────────────────────────────────
 const testConnection = async () => {
   try {
     await sequelize.authenticate();
@@ -80,7 +101,6 @@ const testConnection = async () => {
 
 const syncDatabase = async () => {
   try {
-    // Ajustes mínimos de esquema para BD heredada (sin usar alter global).
     await sequelize.query(`
       ALTER TABLE incidencias
       ADD COLUMN IF NOT EXISTS fecha_actualizacion TIMESTAMP WITH TIME ZONE
@@ -98,20 +118,14 @@ const syncDatabase = async () => {
       ADD COLUMN IF NOT EXISTS fecha_creacion TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     `);
 
-    // Backfill defensivo: evita fallos al imponer NOT NULL en columnas
-    // de timestamps cuando existen registros antiguos con valor NULL.
     try {
       await sequelize.query(`
         UPDATE usuarios
         SET fecha_actualizacion = COALESCE(fecha_actualizacion, fecha_creacion, NOW())
         WHERE fecha_actualizacion IS NULL
       `);
-    } catch (_backfillError) {
-      // Si la tabla/columna aún no existe (entornos nuevos), continuamos.
-    }
+    } catch (_) {}
 
-    // sync() crea tablas faltantes sin alterar estructura existente.
-    // Evita errores peligrosos de alter automático (ENUMs, NOT NULL, etc.).
     await sequelize.sync();
     console.log("✅ Modelos sincronizados con la BD.");
   } catch (error) {
@@ -125,6 +139,7 @@ module.exports = {
   Categoria,
   Incidencia,
   Comentario,
+  HistorialEstado,
   testConnection,
   syncDatabase,
 };

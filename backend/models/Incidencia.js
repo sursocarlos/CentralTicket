@@ -39,6 +39,10 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      fecha_resolucion: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
       id_creador: {
         type: DataTypes.INTEGER,
         allowNull: false,

@@ -1,24 +1,30 @@
 const express = require("express");
 const router = express.Router();
 const { body, validationResult } = require("express-validator");
-const { Op } = require("sequelize");
-const { Incidencia, Usuario, Categoria, Comentario } = require("../models");
+const {
+  Incidencia,
+  Usuario,
+  Categoria,
+  Comentario,
+  HistorialEstado,
+} = require("../models");
 const {
   verificarToken,
   verificarRol,
 } = require("../middlewares/authMiddleware");
 
-// GET /api/incidencias — filtrado según rol
+// ── GET / — filtrado según rol ───────────────────────────
 router.get("/", verificarToken, async (req, res) => {
   try {
     const { rol, id } = req.usuario;
-    const { estado, prioridad } = req.query;
+    const { estado, prioridad, id_usuario } = req.query;
 
     const where = {};
     if (rol === "empleado") where.id_creador = id;
     if (rol === "tecnico") where.id_tecnico = id;
     if (estado) where.estado = estado;
     if (prioridad) where.prioridad = prioridad;
+    if (rol === "admin" && id_usuario) where.id_creador = id_usuario;
 
     const incidencias = await Incidencia.findAll({
       where,
@@ -49,7 +55,7 @@ router.get("/", verificarToken, async (req, res) => {
   }
 });
 
-// GET /api/incidencias/stats — estadísticas para admin
+// ── GET /stats — solo admin ──────────────────────────────
 router.get(
   "/stats",
   verificarToken,
@@ -64,7 +70,6 @@ router.get(
       const resueltas = await Incidencia.count({
         where: { estado: "resuelta" },
       });
-
       res.json({ total, abiertas, proceso, resueltas });
     } catch (error) {
       res.status(500).json({ error: "Error al obtener estadísticas." });
@@ -72,7 +77,7 @@ router.get(
   },
 );
 
-// GET /api/incidencias/:id
+// ── GET /:id ─────────────────────────────────────────────
 router.get("/:id", verificarToken, async (req, res) => {
   try {
     const incidencia = await Incidencia.findByPk(req.params.id, {
@@ -98,7 +103,21 @@ router.get("/:id", verificarToken, async (req, res) => {
               attributes: ["id", "nombre", "rol"],
             },
           ],
+          separate: true,
           order: [["fecha_creacion", "ASC"]],
+        },
+        {
+          model: HistorialEstado,
+          as: "historial",
+          include: [
+            {
+              model: Usuario,
+              as: "usuario",
+              attributes: ["id", "nombre", "rol"],
+            },
+          ],
+          separate: true,
+          order: [["fecha_cambio", "ASC"]],
         },
       ],
     });
@@ -107,25 +126,23 @@ router.get("/:id", verificarToken, async (req, res) => {
       return res.status(404).json({ error: "Incidencia no encontrada." });
 
     const { rol, id } = req.usuario;
-    if (rol === "empleado" && incidencia.id_creador !== id) {
+    if (rol === "empleado" && incidencia.id_creador !== id)
       return res
         .status(403)
         .json({ error: "No tienes permiso para ver esta incidencia." });
-    }
-
-    if (rol === "tecnico" && incidencia.id_tecnico !== id) {
+    if (rol === "tecnico" && incidencia.id_tecnico !== id)
       return res
         .status(403)
         .json({ error: "No tienes permiso para ver esta incidencia." });
-    }
 
     res.json(incidencia);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Error al obtener la incidencia." });
   }
 });
 
-// POST /api/incidencias — empleado, técnico o admin
+// ── POST / ───────────────────────────────────────────────
 router.post(
   "/",
   verificarToken,
@@ -138,9 +155,8 @@ router.post(
   ],
   async (req, res) => {
     const errores = validationResult(req);
-    if (!errores.isEmpty()) {
+    if (!errores.isEmpty())
       return res.status(400).json({ errores: errores.array() });
-    }
 
     try {
       const incidencia = await Incidencia.create({
@@ -164,7 +180,7 @@ router.post(
   },
 );
 
-// PATCH /api/incidencias/:id/estado — técnico o admin
+// ── PATCH /:id/estado — técnico o admin ──────────────────
 router.patch(
   "/:id/estado",
   verificarToken,
@@ -176,24 +192,42 @@ router.patch(
   ],
   async (req, res) => {
     const errores = validationResult(req);
-    if (!errores.isEmpty()) {
+    if (!errores.isEmpty())
       return res.status(400).json({ errores: errores.array() });
-    }
 
     try {
       const incidencia = await Incidencia.findByPk(req.params.id);
       if (!incidencia)
         return res.status(404).json({ error: "Incidencia no encontrada." });
 
-      await incidencia.update({ estado: req.body.estado });
+      const estadoAnterior = incidencia.estado;
+      const estadoNuevo = req.body.estado;
+
+      if (estadoAnterior === estadoNuevo)
+        return res.json({ mensaje: "Sin cambios.", incidencia });
+
+      const updates = { estado: estadoNuevo };
+      if (estadoNuevo === "resuelta") updates.fecha_resolucion = new Date();
+      if (estadoNuevo !== "resuelta") updates.fecha_resolucion = null;
+
+      await incidencia.update(updates);
+
+      await HistorialEstado.create({
+        id_incidencia: incidencia.id,
+        id_usuario: req.usuario.id,
+        estado_anterior: estadoAnterior,
+        estado_nuevo: estadoNuevo,
+      });
+
       res.json({ mensaje: "Estado actualizado.", incidencia });
     } catch (error) {
+      console.error(error);
       res.status(500).json({ error: "Error al actualizar estado." });
     }
   },
 );
 
-// PATCH /api/incidencias/:id/asignar — solo admin
+// ── PATCH /:id/asignar — solo admin ──────────────────────
 router.patch(
   "/:id/asignar",
   verificarToken,
@@ -204,10 +238,29 @@ router.patch(
       if (!incidencia)
         return res.status(404).json({ error: "Incidencia no encontrada." });
 
-      await incidencia.update({ id_tecnico: req.body.id_tecnico });
+      await incidencia.update({ id_tecnico: req.body.id_tecnico || null });
       res.json({ mensaje: "Técnico asignado correctamente.", incidencia });
     } catch (error) {
       res.status(500).json({ error: "Error al asignar técnico." });
+    }
+  },
+);
+
+// ── DELETE /:id — solo admin ─────────────────────────────
+router.delete(
+  "/:id",
+  verificarToken,
+  verificarRol("admin"),
+  async (req, res) => {
+    try {
+      const incidencia = await Incidencia.findByPk(req.params.id);
+      if (!incidencia)
+        return res.status(404).json({ error: "Incidencia no encontrada." });
+
+      await incidencia.destroy();
+      res.json({ mensaje: "Incidencia eliminada correctamente." });
+    } catch (error) {
+      res.status(500).json({ error: "Error al eliminar la incidencia." });
     }
   },
 );

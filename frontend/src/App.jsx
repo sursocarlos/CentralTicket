@@ -6,6 +6,7 @@ import NotFound from './pages/NotFound';
 import AdminDashboard    from './pages/admin/AdminDashboard';
 import GestionUsuarios   from './pages/admin/GestionUsuarios';
 import GestionCategorias from './pages/admin/GestionCategorias';
+import IncidenciasUsuario from './pages/admin/IncidenciasUsuario';
 import TecnicoDashboard  from './pages/tecnico/TecnicoDashboard';
 import DetalleIncidencia from './pages/tecnico/DetalleIncidencia';
 import EmpleadoDashboard from './pages/empleado/EmpleadoDashboard';
@@ -25,6 +26,8 @@ function AppRoutes() {
         <ProtectedRoute rol="admin"><GestionCategorias /></ProtectedRoute>} />
       <Route path="/admin/incidencias/:id" element={
         <ProtectedRoute rol="admin"><DetalleIncidencia /></ProtectedRoute>} />
+      <Route path="/admin/usuarios/:id/incidencias" element={
+        <ProtectedRoute rol="admin"><IncidenciasUsuario /></ProtectedRoute>} />
 
       <Route path="/tecnico" element={
         <ProtectedRoute rol="tecnico"><TecnicoDashboard /></ProtectedRoute>} />
