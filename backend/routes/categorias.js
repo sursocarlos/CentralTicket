@@ -25,6 +25,19 @@ router.get(
   },
 );
 
+// GET /api/categorias — Obtener solo categorías activas (para todos los usuarios)
+router.get("/", verificarToken, async (req, res) => {
+  try {
+    const categorias = await Categoria.findAll({
+      where: { activa: true }, // Solo mostramos las que no están desactivadas
+      order: [["nombre", "ASC"]],
+    });
+    res.json(categorias);
+  } catch (error) {
+    res.status(500).json({ error: "Error al obtener categorías." });
+  }
+});
+
 // POST /api/categorias — solo admin
 router.post(
   "/",
