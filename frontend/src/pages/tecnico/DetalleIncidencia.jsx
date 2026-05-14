@@ -198,10 +198,12 @@ export default function DetalleIncidencia() {
                   <div className={`comment-avatar rol-${c.autor?.rol}`}>{initials(c.autor?.nombre)}</div>
                   <div className="comment-body">
                     <div className="comment-meta">
-                      <span className="comment-author">{c.autor?.nombre || 'Usuario'}</span>
-                      <span className={`badge b-${c.autor?.rol}`} style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>
-                        {c.autor?.rol}
-                      </span>
+                      <span className="comment-author">{c.autor?.nombre || 'Usuario eliminado'}</span>
+                      {c.autor?.rol && (
+                        <span className={`badge b-${c.autor?.rol}`} style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>
+                          {c.autor?.rol}
+                        </span>
+                      )}
                       <span className="comment-time">{fmt(c.fecha_creacion)}</span>
                     </div>
                     <p className="comment-text">{c.contenido}</p>

@@ -32,22 +32,34 @@ const HistorialEstado = require("./HistorialEstado")(sequelize);
 Usuario.hasMany(Incidencia, {
   foreignKey: "id_creador",
   as: "incidenciasCreadas",
+  onDelete: "SET NULL",
 });
 Usuario.hasMany(Incidencia, {
   foreignKey: "id_tecnico",
   as: "incidenciasAsignadas",
+  onDelete: "SET NULL",
 });
-Incidencia.belongsTo(Usuario, { foreignKey: "id_creador", as: "creador" });
-Incidencia.belongsTo(Usuario, { foreignKey: "id_tecnico", as: "tecnico" });
+Incidencia.belongsTo(Usuario, {
+  foreignKey: "id_creador",
+  as: "creador",
+  onDelete: "SET NULL",
+});
+Incidencia.belongsTo(Usuario, {
+  foreignKey: "id_tecnico",
+  as: "tecnico",
+  onDelete: "SET NULL",
+});
 
 // Categoria ↔ Incidencia
 Categoria.hasMany(Incidencia, {
   foreignKey: "id_categoria",
   as: "incidencias",
+  onDelete: "SET NULL",
 });
 Incidencia.belongsTo(Categoria, {
   foreignKey: "id_categoria",
   as: "categoria",
+  onDelete: "SET NULL",
 });
 
 // Incidencia ↔ Comentario
@@ -66,8 +78,13 @@ Comentario.belongsTo(Incidencia, {
 Usuario.hasMany(Comentario, {
   foreignKey: "id_usuario",
   as: "comentariosEscritos",
+  onDelete: "SET NULL",
 });
-Comentario.belongsTo(Usuario, { foreignKey: "id_usuario", as: "autor" });
+Comentario.belongsTo(Usuario, {
+  foreignKey: "id_usuario",
+  as: "autor",
+  onDelete: "SET NULL",
+});
 
 // Incidencia ↔ HistorialEstado
 Incidencia.hasMany(HistorialEstado, {
@@ -84,8 +101,13 @@ HistorialEstado.belongsTo(Incidencia, {
 Usuario.hasMany(HistorialEstado, {
   foreignKey: "id_usuario",
   as: "historialCambios",
+  onDelete: "SET NULL",
 });
-HistorialEstado.belongsTo(Usuario, { foreignKey: "id_usuario", as: "usuario" });
+HistorialEstado.belongsTo(Usuario, {
+  foreignKey: "id_usuario",
+  as: "usuario",
+  onDelete: "SET NULL",
+});
 
 // ── Funciones de utilidad ────────────────────────────────
 const testConnection = async () => {
