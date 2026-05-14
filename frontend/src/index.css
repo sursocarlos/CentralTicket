@@ -829,8 +829,6 @@ input[type="color"] {
   .cat-grid   { grid-template-columns: 1fr; }
   .badge      { font-size: 0.65rem; padding: 0.15rem 0.45rem; }
   .ticket-badges .badge:first-child { display: none; }
-  /*
   .section-header { margin-bottom: 0.875rem; flex-direction: column; align-items: flex-start; gap: 0.5rem; }
   .section-header .btn { font-size: 0.75rem; padding: 0.3rem 0.65rem; width: 100%; justify-content: center; }
-  */
 }
