@@ -3,7 +3,10 @@ const router = express.Router();
 const jwt = require("jsonwebtoken");
 const { body, validationResult } = require("express-validator");
 const { Usuario } = require("../models");
-const { verificarToken } = require("../middlewares/authMiddleware");
+const {
+  verificarToken,
+  verificarRol,
+} = require("../middlewares/authMiddleware");
 
 // POST /api/auth/login
 router.post(
