@@ -29,7 +29,9 @@ router.post(
 
       // Compatibilidad: permite login con contraseñas antiguas en texto plano
       // y las migra a hash bcrypt automáticamente tras login correcto.
-      const pareceHashBcrypt = /^\$2[aby]\$\d{2}\$/.test(usuario.password || "");
+      const pareceHashBcrypt = /^\$2[aby]\$\d{2}\$/.test(
+        usuario.password || "",
+      );
       let passwordValida = false;
 
       if (pareceHashBcrypt) {
@@ -68,9 +70,11 @@ router.get("/me", verificarToken, (req, res) => {
   res.json({ usuario: req.usuario });
 });
 
-// POST /api/auth/registro — solo para el primer admin (o protegerlo luego)
+// POST /api/auth/registro
 router.post(
   "/registro",
+  verificarToken,
+  verificarRol("admin"),
   [
     body("nombre").notEmpty().withMessage("El nombre es obligatorio").trim(),
     body("email").isEmail().withMessage("Email no válido").normalizeEmail(),
