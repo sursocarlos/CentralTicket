@@ -60,18 +60,18 @@ body {
   background: var(--bg-page);
   color: var(--text-main);
   line-height: 1.6;
-  min-height: 100vh;
+  min-height: 100dvh;
   transition: background var(--transition), color var(--transition);
 }
 button { font-family: inherit; }
 a { text-decoration: none; color: inherit; }
 
 /* === LAYOUT === */
-.app-layout { display: flex; min-height: 100vh; }
+.app-layout { display: flex; min-height: 100dvh; }
 .main-content {
   flex: 1;
   margin-left: var(--sidebar-w);
-  min-height: 100vh;
+  min-height: 100dvh;
   padding: 2rem 2.5rem;
   max-width: calc(100vw - var(--sidebar-w));
   overflow-x: hidden;
@@ -474,7 +474,7 @@ tbody tr:hover { background: var(--bg-hover); }
 @keyframes spin { to { transform: rotate(360deg); } }
 .loading-page {
   display: flex; align-items: center; justify-content: center;
-  min-height: 100vh; flex-direction: column; gap: 1rem; color: var(--text-muted);
+  min-height: 100dvh; flex-direction: column; gap: 1rem; color: var(--text-muted);
   font-size: 0.875rem;
 }
 .loading-center { display: flex; align-items: center; justify-content: center; padding: 3rem; }
@@ -543,7 +543,7 @@ tbody tr:hover { background: var(--bg-hover); }
 
 /* === LOGIN === */
 .login-page {
-  min-height: 100vh; background: var(--bg-page);
+  min-height: 100dvh; background: var(--bg-page);
   display: flex; align-items: center; justify-content: center; padding: 2rem;
 }
 .login-card {
