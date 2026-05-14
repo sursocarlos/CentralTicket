@@ -630,6 +630,55 @@ input[type="color"] {
 .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
 .section-title { font-size: 1rem; font-weight: 600; }
 
+
+/*
+.login-input:-webkit-autofill {
+  transition: background-color 0s ease-in-out 0s;
+  font-family: inherit !important;
+}
+
+/* Forzado para MODO OSCURO: Usa exactamente el color de fondo de tu tema 
+[data-theme="dark"] .login-input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px var(--bg-input) inset !important;
+  -webkit-text-fill-color: var(--text-main) !important;
+}
+
+/* Forzado para MODO CLARO: Usa exactamente el color de fondo de tu tema 
+[data-theme="light"] .login-input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px var(--bg-input) inset !important;
+  -webkit-text-fill-color: var(--text-main) !important;
+}
+
+.login-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-muted);
+}
+*/
+
+/* Bloque para que el autocompletado sea invisible y use tu estilo de foco */
+.login-input:-webkit-autofill {
+  transition: background-color 0s ease-in-out 0s;
+  font-family: inherit !important;
+}
+
+/* Modo OSCURO: Fondo correcto + Estilo Focus */
+[data-theme="dark"] .login-input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px var(--bg-input) inset, 0 0 0 3px var(--accent-muted) !important;
+  -webkit-text-fill-color: var(--text-main) !important;
+  border-color: var(--accent);
+  caret-color: var(--text-main) !important;
+}
+
+/* Modo CLARO: Fondo correcto + Estilo Focus */
+[data-theme="light"] .login-input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px var(--bg-input) inset, 0 0 0 3px var(--accent-muted) !important;
+  -webkit-text-fill-color: var(--text-main) !important;
+  caret-color: var(--text-main) !important;
+  border-color: var(--accent);
+}
+
+
 /* =============================================
    RESPONSIVE
    ============================================= */
