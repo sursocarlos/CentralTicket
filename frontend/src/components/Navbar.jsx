@@ -7,17 +7,17 @@ import { useAuth } from '../context/AuthContext';
 
 const NAV = {
   admin: [
-    { to: '/admin',            icon: LayoutDashboard, label: 'Panel' },
-    { to: '/admin/usuarios',   icon: Users,           label: 'Usuarios' },
-    { to: '/admin/categorias', icon: Tag,             label: 'Categorías' },
+    { to: '/admin', icon: LayoutDashboard, label: 'Panel' },
+    { to: '/admin/usuarios', icon: Users, label: 'Usuarios' },
+    { to: '/admin/categorias', icon: Tag, label: 'Categorías' },
   ],
   tecnico: [
     { to: '/tecnico', icon: ClipboardList, label: 'Mis tickets' },
   ],
   empleado: [
-    { to: '/empleado',             icon: LayoutDashboard, label: 'Inicio' },
-    { to: '/empleado/incidencias', icon: ClipboardList,   label: 'Mis tickets' },
-    { to: '/empleado/crear',       icon: PlusCircle,      label: 'Nueva' },
+    { to: '/empleado', icon: LayoutDashboard, label: 'Inicio' },
+    { to: '/empleado/incidencias', icon: ClipboardList, label: 'Mis tickets' },
+    { to: '/empleado/crear', icon: PlusCircle, label: 'Nueva' },
   ],
 };
 
@@ -83,13 +83,26 @@ export default function Navbar() {
           <div className="sidebar-logo-icon" style={{ width: 28, height: 28, borderRadius: 8 }}>
             <Ticket size={15} />
           </div>
-          <span className="sidebar-brand-name" style={{ fontSize: '0.9rem' }}>CentralTicket</span>
+          <span className="sidebar-brand-name" style={{ fontSize: '0.875rem' }}>CentralTicket</span>
         </div>
         <div className="mobile-topbar-actions">
-          <button className="sidebar-action-btn theme-btn" onClick={toggleTheme} style={{ padding: '0.35rem', border: 'none' }}>
+          <button
+            className="sidebar-action-btn theme-btn"
+            onClick={toggleTheme}
+            style={{ padding: '0.35rem 0.4rem', width: 'auto' }}
+            title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+          >
             {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
           </button>
-          <button className="sidebar-action-btn logout-btn" onClick={handleLogout} style={{ padding: '0.35rem', border: 'none' }}>
+          <div className="mobile-topbar-avatar" title={user?.nombre}>
+            {initials}
+          </div>
+          <button
+            className="sidebar-action-btn logout-btn"
+            onClick={handleLogout}
+            style={{ padding: '0.35rem 0.4rem', width: 'auto' }}
+            title="Cerrar sesión"
+          >
             <LogOut size={16} />
           </button>
         </div>

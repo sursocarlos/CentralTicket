@@ -41,15 +41,15 @@ function ConfirmModal({ title, message, onConfirm, onCancel }) {
 }
 
 export default function IncidenciasUsuario() {
-  const { id }   = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
 
-  const [usuario, setUsuario]         = useState(null);
+  const [usuario, setUsuario] = useState(null);
   const [incidencias, setIncidencias] = useState([]);
-  const [loading, setLoading]         = useState(true);
-  const [error, setError]             = useState('');
-  const [success, setSuccess]         = useState('');
-  const [confirm, setConfirm]         = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [confirm, setConfirm] = useState(null);
 
   const load = async () => {
     try {
@@ -116,79 +116,91 @@ export default function IncidenciasUsuario() {
             </p>
           </div>
 
-          {error   && <div className="alert alert-error"   onClick={() => setError('')}  style={{ cursor: 'pointer', marginBottom: '1rem' }}>{error}</div>}
+          {error && <div className="alert alert-error" onClick={() => setError('')} style={{ cursor: 'pointer', marginBottom: '1rem' }}>{error}</div>}
           {success && <div className="alert alert-success" onClick={() => setSuccess('')} style={{ cursor: 'pointer', marginBottom: '1rem' }}>{success}</div>}
 
           {incidencias.length === 0 ? (
             <div className="card">
               <div className="empty-state">
-                <ClipboardList />
-                <h3>Sin incidencias</h3>
+                <ClipboardList /><h3>Sin incidencias</h3>
                 <p>Este usuario no ha creado ninguna incidencia todavía.</p>
               </div>
             </div>
           ) : (
-            <div className="table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Título</th>
-                    <th>Estado</th>
-                    <th>Prioridad</th>
-                    <th>Categoría</th>
-                    <th>Técnico</th>
-                    <th>Fecha</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {incidencias.map(inc => (
-                    <tr
-                      key={inc.id}
-                      onClick={() => navigate(`/admin/incidencias/${inc.id}`)}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <td style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>
-                        #{String(inc.id).padStart(3, '0')}
-                      </td>
-                      <td style={{ fontWeight: 500, maxWidth: 220 }}>
-                        <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {inc.titulo}
-                        </div>
-                      </td>
-                      <td><BadgeEstado estado={inc.estado} /></td>
-                      <td><BadgePrioridad p={inc.prioridad} /></td>
-                      <td>
-                        {inc.categoria
-                          ? <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <>
+              {/* Tabla — desktop */}
+              <div className="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th><th>Título</th><th>Estado</th><th>Prioridad</th>
+                      <th>Categoría</th><th>Técnico</th><th>Fecha</th><th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {incidencias.map(inc => (
+                      <tr key={inc.id} onClick={() => navigate(`/admin/incidencias/${inc.id}`)} style={{ cursor: 'pointer' }}>
+                        <td style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>#{String(inc.id).padStart(3, '0')}</td>
+                        <td style={{ fontWeight: 500, maxWidth: 220 }}>
+                          <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inc.titulo}</div>
+                        </td>
+                        <td><BadgeEstado estado={inc.estado} /></td>
+                        <td><BadgePrioridad p={inc.prioridad} /></td>
+                        <td>
+                          {inc.categoria
+                            ? <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                               <span className="cat-dot" style={{ background: inc.categoria.color }} />
                               {inc.categoria.nombre}
                             </span>
-                          : <span style={{ color: 'var(--text-faint)' }}>Sin categoría</span>
-                        }
-                      </td>
-                      <td style={{ color: 'var(--text-muted)' }}>
-                        {inc.tecnico?.nombre || <span style={{ color: 'var(--text-faint)' }}>Sin asignar</span>}
-                      </td>
-                      <td style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>
-                        {fmt(inc.fecha_creacion)}
-                      </td>
-                      <td onClick={e => e.stopPropagation()}>
-                        <button
-                          className="btn btn-ghost btn-sm"
-                          style={{ color: 'var(--danger)' }}
-                          onClick={() => setConfirm(inc)}
-                          title="Eliminar incidencia"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                            : <span style={{ color: 'var(--text-faint)' }}>Sin categoría</span>
+                          }
+                        </td>
+                        <td style={{ color: 'var(--text-muted)' }}>{inc.tecnico?.nombre || <span style={{ color: 'var(--text-faint)' }}>Sin asignar</span>}</td>
+                        <td style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>{fmt(inc.fecha_creacion)}</td>
+                        <td onClick={e => e.stopPropagation()}>
+                          <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => setConfirm(inc)} title="Eliminar"><Trash2 size={14} /></button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile cards — móvil */}
+              <div className="mobile-card-list">
+                {incidencias.map(inc => (
+                  <div key={inc.id} className="mobile-card" onClick={() => navigate(`/admin/incidencias/${inc.id}`)}>
+                    <div className="mobile-card-header">
+                      <div className="mobile-card-title">{inc.titulo}</div>
+                      <span className="mobile-card-id">#{String(inc.id).padStart(3, '0')}</span>
+                    </div>
+                    <div className="mobile-card-badges">
+                      <BadgeEstado estado={inc.estado} />
+                      <BadgePrioridad p={inc.prioridad} />
+                      {inc.categoria && (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                          <span className="cat-dot" style={{ background: inc.categoria.color }} />
+                          {inc.categoria.nombre}
+                        </span>
+                      )}
+                    </div>
+                    <div className="mobile-card-meta">
+                      <div className="mobile-card-meta-item">
+                        <span className="mobile-card-meta-label">Técnico</span>
+                        <span className="mobile-card-meta-value">{inc.tecnico?.nombre || 'Sin asignar'}</span>
+                      </div>
+                      <div className="mobile-card-meta-item" style={{ alignItems: 'flex-end' }}>
+                        <span className="mobile-card-meta-label">Fecha</span>
+                        <span className="mobile-card-meta-value">{fmt(inc.fecha_creacion)}</span>
+                      </div>
+                      <div className="mobile-card-actions" onClick={e => e.stopPropagation()}>
+                        <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => setConfirm(inc)}><Trash2 size={14} /></button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </>
       )}

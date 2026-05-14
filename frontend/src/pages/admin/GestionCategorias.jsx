@@ -30,22 +30,18 @@ function ConfirmModal({ title, message, confirmLabel, confirmClass = 'btn-danger
 
 export default function GestionCategorias() {
   const [categorias, setCategorias] = useState([]);
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState('');
-  const [success, setSuccess]       = useState('');
-
-  const [modal, setModal]           = useState(false);
-  const [form, setForm]             = useState(EMPTY);
-  const [editId, setEditId]         = useState(null);
-  const [saving, setSaving]         = useState(false);
-  const [formError, setFormError]   = useState('');
-
-  // { type: 'toggle' | 'delete', categoria }
-  const [confirm, setConfirm]       = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [modal, setModal] = useState(false);
+  const [form, setForm] = useState(EMPTY);
+  const [editId, setEditId] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [confirm, setConfirm] = useState(null);
 
   const load = async () => {
     try {
-      // Traemos todas incluyendo inactivas para que el admin las vea
       const { data } = await api.get('/categorias/todas');
       setCategorias(data);
     } catch {
@@ -63,7 +59,7 @@ export default function GestionCategorias() {
   };
 
   const openCreate = () => { setForm(EMPTY); setEditId(null); setFormError(''); setModal(true); };
-  const openEdit   = (c) => {
+  const openEdit = (c) => {
     setForm({ nombre: c.nombre, color: c.color });
     setEditId(c.id); setFormError(''); setModal(true);
   };
@@ -72,7 +68,7 @@ export default function GestionCategorias() {
     e.preventDefault(); setSaving(true); setFormError('');
     try {
       if (editId) await api.put(`/categorias/${editId}`, form);
-      else        await api.post('/categorias', form);
+      else await api.post('/categorias', form);
       showSuccess(editId ? 'Categoría actualizada.' : 'Categoría creada.');
       setModal(false); load();
     } catch (err) {
@@ -122,67 +118,78 @@ export default function GestionCategorias() {
         </button>
       </div>
 
-      {error   && (
-        <div className="alert alert-error" onClick={() => setError('')} style={{ cursor: 'pointer', marginBottom: '1rem' }}>
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="alert alert-success" onClick={() => setSuccess('')} style={{ cursor: 'pointer', marginBottom: '1rem' }}>
-          {success}
-        </div>
-      )}
+      {error && <div className="alert alert-error" onClick={() => setError('')} style={{ cursor: 'pointer' }}>{error}</div>}
+      {success && <div className="alert alert-success" onClick={() => setSuccess('')} style={{ cursor: 'pointer' }}>{success}</div>}
 
       {loading ? (
         <div className="loading-center"><div className="spinner" /></div>
+      ) : categorias.length === 0 ? (
+        <div className="card">
+          <div className="empty-state">
+            <Tag /><h3>Sin categorías</h3>
+            <p>Crea la primera para clasificar las incidencias.</p>
+          </div>
+        </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '0.875rem' }}>
-          {categorias.length === 0 && (
-            <div className="card" style={{ gridColumn: '1/-1' }}>
-              <div className="empty-state">
-                <Tag /><h3>Sin categorías</h3>
-                <p>Crea la primera para clasificar las incidencias.</p>
-              </div>
-            </div>
-          )}
+        <div className="cat-grid">
           {categorias.map(c => (
-            <div key={c.id} className="card" style={{
-              display: 'flex', alignItems: 'center', gap: '0.875rem',
-              opacity: c.activa ? 1 : 0.5
-            }}>
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: c.color + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Tag size={18} style={{ color: c.color }} />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  {c.nombre}
-                  {!c.activa && <span className="badge b-inactivo" style={{ fontSize: '0.65rem' }}>Inactiva</span>}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
-                  <span className="cat-dot" style={{ background: c.color }} />
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-faint)' }}>{c.color}</span>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 2 }}>
-                <button className="btn btn-ghost btn-sm" onClick={() => openEdit(c)} title="Editar">
-                  <Pencil size={13} />
-                </button>
-                <button
-                  className="btn btn-ghost btn-sm"
-                  style={{ color: c.activa ? 'var(--warning)' : 'var(--success)' }}
-                  onClick={() => setConfirm({ type: 'toggle', categoria: c })}
-                  title={c.activa ? 'Desactivar' : 'Activar'}
+            <div
+              key={c.id}
+              className="cat-card"
+              style={{ opacity: c.activa ? 1 : 0.55 }}
+            >
+              {/* Fila superior: icono + nombre */}
+              <div className="cat-card-top">
+                <div
+                  className="cat-card-icon"
+                  style={{
+                    background: c.color + '22',
+                    border: `1px solid ${c.color}44`,
+                  }}
                 >
-                  {c.activa ? <EyeOff size={13} /> : <Eye size={13} />}
-                </button>
-                <button
-                  className="btn btn-ghost btn-sm"
-                  style={{ color: 'var(--danger)' }}
-                  onClick={() => setConfirm({ type: 'delete', categoria: c })}
-                  title="Eliminar permanentemente"
-                >
-                  <Trash2 size={13} />
-                </button>
+                  <Tag size={18} style={{ color: c.color }} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="cat-card-name">{c.nombre}</div>
+                  {!c.activa && (
+                    <span className="badge b-inactivo" style={{ fontSize: '0.62rem', marginTop: '0.2rem', display: 'inline-block' }}>
+                      Inactiva
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Fila inferior: color + acciones */}
+              <div className="cat-card-bottom">
+                <div className="cat-card-color">
+                  <span className="cat-card-color-dot" style={{ background: c.color }} />
+                  <span className="cat-card-color-hex">{c.color}</span>
+                </div>
+                <div className="cat-card-actions">
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => openEdit(c)}
+                    title="Editar"
+                  >
+                    <Pencil size={13} />
+                  </button>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    style={{ color: c.activa ? 'var(--warning)' : 'var(--success)' }}
+                    onClick={() => setConfirm({ type: 'toggle', categoria: c })}
+                    title={c.activa ? 'Desactivar' : 'Activar'}
+                  >
+                    {c.activa ? <EyeOff size={13} /> : <Eye size={13} />}
+                  </button>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    style={{ color: 'var(--danger)' }}
+                    onClick={() => setConfirm({ type: 'delete', categoria: c })}
+                    title="Eliminar permanentemente"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -201,19 +208,29 @@ export default function GestionCategorias() {
             <form onSubmit={handleSave}>
               <div className="form-group">
                 <label className="form-label">Nombre</label>
-                <input className="form-input" value={form.nombre}
+                <input
+                  className="form-input"
+                  value={form.nombre}
                   onChange={e => setForm({ ...form, nombre: e.target.value })}
-                  required placeholder="Ej. Hardware, Software, Redes..." />
+                  required
+                  placeholder="Ej. Hardware, Software, Redes..."
+                />
               </div>
               <div className="form-group">
                 <label className="form-label">Color identificativo</label>
                 <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                  <input type="color" value={form.color}
+                  <input
+                    type="color"
+                    value={form.color}
                     onChange={e => setForm({ ...form, color: e.target.value })}
-                    style={{ width: 56, height: 42, padding: 4, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-input)', cursor: 'pointer' }} />
-                  <input className="form-input" value={form.color}
+                    style={{ width: 56, height: 42, padding: 4, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-input)', cursor: 'pointer' }}
+                  />
+                  <input
+                    className="form-input"
+                    value={form.color}
                     onChange={e => setForm({ ...form, color: e.target.value })}
-                    style={{ flex: 1 }} />
+                    style={{ flex: 1 }}
+                  />
                 </div>
               </div>
               <div className="modal-footer">
@@ -227,7 +244,6 @@ export default function GestionCategorias() {
         </div>
       )}
 
-      {/* Modal confirmación desactivar/activar */}
       {confirm?.type === 'toggle' && (
         <ConfirmModal
           title={confirm.categoria.activa ? 'Desactivar categoría' : 'Activar categoría'}
@@ -243,7 +259,6 @@ export default function GestionCategorias() {
         />
       )}
 
-      {/* Modal confirmación eliminar */}
       {confirm?.type === 'delete' && (
         <ConfirmModal
           title="Eliminar categoría"

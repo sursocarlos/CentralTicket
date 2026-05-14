@@ -41,12 +41,12 @@ function ConfirmModal({ title, message, onConfirm, onCancel }) {
 }
 
 export default function AdminDashboard() {
-  const [stats, setStats]             = useState({ total: 0, abiertas: 0, proceso: 0, resueltas: 0 });
+  const [stats, setStats] = useState({ total: 0, abiertas: 0, proceso: 0, resueltas: 0 });
   const [incidencias, setIncidencias] = useState([]);
-  const [loading, setLoading]         = useState(true);
-  const [error, setError]             = useState('');
-  const [success, setSuccess]         = useState('');
-  const [confirm, setConfirm]         = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [confirm, setConfirm] = useState(null);
   const navigate = useNavigate();
 
   const load = async () => {
@@ -92,15 +92,15 @@ export default function AdminDashboard() {
         <p>Resumen general del sistema de incidencias</p>
       </div>
 
-      {error   && <div className="alert alert-error"   onClick={() => setError('')}  style={{ cursor: 'pointer', marginBottom: '1rem' }}>{error}</div>}
+      {error && <div className="alert alert-error" onClick={() => setError('')} style={{ cursor: 'pointer', marginBottom: '1rem' }}>{error}</div>}
       {success && <div className="alert alert-success" onClick={() => setSuccess('')} style={{ cursor: 'pointer', marginBottom: '1rem' }}>{success}</div>}
 
       <div className="stats-grid">
         {[
-          { label: 'Total incidencias', value: stats.total,     icon: Ticket,      cls: 'si-blue'   },
-          { label: 'Abiertas',          value: stats.abiertas,  icon: AlertCircle, cls: 'si-purple' },
-          { label: 'En proceso',        value: stats.proceso,   icon: Clock,       cls: 'si-amber'  },
-          { label: 'Resueltas',         value: stats.resueltas, icon: CheckCircle, cls: 'si-green'  },
+          { label: 'Total incidencias', value: stats.total, icon: Ticket, cls: 'si-blue' },
+          { label: 'Abiertas', value: stats.abiertas, icon: AlertCircle, cls: 'si-purple' },
+          { label: 'En proceso', value: stats.proceso, icon: Clock, cls: 'si-amber' },
+          { label: 'Resueltas', value: stats.resueltas, icon: CheckCircle, cls: 'si-green' },
         ].map(({ label, value, icon: Icon, cls }) => (
           <div key={label} className="stat-card">
             <div className={`stat-icon ${cls}`}><Icon size={22} /></div>
@@ -119,6 +119,7 @@ export default function AdminDashboard() {
         </button>
       </div>
 
+      {/* Tabla — visible en desktop */}
       <div className="table-wrapper">
         <table>
           <thead>
@@ -135,18 +136,10 @@ export default function AdminDashboard() {
                 </td>
               </tr>
             ) : incidencias.map(inc => (
-              <tr
-                key={inc.id}
-                onClick={() => navigate(`/admin/incidencias/${inc.id}`)}
-                style={{ cursor: 'pointer' }}
-              >
-                <td style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>
-                  #{String(inc.id).padStart(3, '0')}
-                </td>
+              <tr key={inc.id} onClick={() => navigate(`/admin/incidencias/${inc.id}`)} style={{ cursor: 'pointer' }}>
+                <td style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>#{String(inc.id).padStart(3, '0')}</td>
                 <td style={{ fontWeight: 500, maxWidth: 220 }}>
-                  <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {inc.titulo}
-                  </div>
+                  <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inc.titulo}</div>
                 </td>
                 <td><BadgeEstado estado={inc.estado} /></td>
                 <td><BadgePrioridad p={inc.prioridad} /></td>
@@ -154,20 +147,15 @@ export default function AdminDashboard() {
                 <td>
                   {inc.categoria
                     ? <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span className="cat-dot" style={{ background: inc.categoria.color }} />
-                        {inc.categoria.nombre}
-                      </span>
+                      <span className="cat-dot" style={{ background: inc.categoria.color }} />
+                      {inc.categoria.nombre}
+                    </span>
                     : <span style={{ color: 'var(--text-faint)' }}>Sin categoría</span>
                   }
                 </td>
                 <td style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>{fmt(inc.fecha_creacion)}</td>
                 <td onClick={e => e.stopPropagation()}>
-                  <button
-                    className="btn btn-ghost btn-sm"
-                    style={{ color: 'var(--danger)' }}
-                    onClick={() => setConfirm(inc)}
-                    title="Eliminar incidencia"
-                  >
+                  <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => setConfirm(inc)} title="Eliminar">
                     <Trash2 size={14} />
                   </button>
                 </td>
@@ -175,6 +163,50 @@ export default function AdminDashboard() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile cards — visibles solo en móvil */}
+      <div className="mobile-card-list">
+        {incidencias.length === 0 ? (
+          <div className="card">
+            <div className="empty-state" style={{ padding: '2rem' }}>
+              <Ticket />
+              <h3>Sin incidencias</h3>
+            </div>
+          </div>
+        ) : incidencias.map(inc => (
+          <div key={inc.id} className="mobile-card" onClick={() => navigate(`/admin/incidencias/${inc.id}`)}>
+            <div className="mobile-card-header">
+              <div className="mobile-card-title">{inc.titulo}</div>
+              <span className="mobile-card-id">#{String(inc.id).padStart(3, '0')}</span>
+            </div>
+            <div className="mobile-card-badges">
+              <BadgeEstado estado={inc.estado} />
+              <BadgePrioridad p={inc.prioridad} />
+              {inc.categoria && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                  <span className="cat-dot" style={{ background: inc.categoria.color }} />
+                  {inc.categoria.nombre}
+                </span>
+              )}
+            </div>
+            <div className="mobile-card-meta">
+              <div className="mobile-card-meta-item">
+                <span className="mobile-card-meta-label">Creador</span>
+                <span className="mobile-card-meta-value">{inc.creador?.nombre || '—'}</span>
+              </div>
+              <div className="mobile-card-meta-item" style={{ alignItems: 'flex-end' }}>
+                <span className="mobile-card-meta-label">Fecha</span>
+                <span className="mobile-card-meta-value">{fmt(inc.fecha_creacion)}</span>
+              </div>
+              <div className="mobile-card-actions" onClick={e => e.stopPropagation()}>
+                <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => setConfirm(inc)}>
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
       {confirm && (

@@ -33,7 +33,7 @@ app.use(
 // --- Rate limiting: máx 100 peticiones por IP cada 15 min ---
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 10000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Demasiadas peticiones. Inténtalo más tarde." },
