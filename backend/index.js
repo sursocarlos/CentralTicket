@@ -13,10 +13,9 @@ const comentariosRoutes = require("./routes/comentarios");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const allowedOrigin = (process.env.FRONTEND_URL || "http://localhost:5173").replace(
-  /\/$/,
-  "",
-);
+const allowedOrigin = (
+  process.env.FRONTEND_URL || "http://localhost:5173"
+).replace(/\/$/, "");
 
 // --- Seguridad: cabeceras HTTP seguras ---
 app.use(helmet());
@@ -30,10 +29,10 @@ app.use(
   }),
 );
 
-// --- Rate limiting: máx 100 peticiones por IP cada 15 min ---
+// --- Rate limiting: máx 1000 peticiones por IP cada 15 min ---
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10000,
+  max: 1000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Demasiadas peticiones. Inténtalo más tarde." },
@@ -43,7 +42,7 @@ app.use(limiter);
 // --- Rate limiting más estricto para login (evitar fuerza bruta) ---
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 50,
   message: { error: "Demasiados intentos de login. Espera 15 minutos." },
 });
 
