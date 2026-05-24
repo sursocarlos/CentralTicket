@@ -1,3 +1,19 @@
+// Gestiona todo el ciclo de vida de una incidencia:
+
+// GET /api/incidencias: Listamos las incidencias según rol
+
+// GET /api/incidencias/stats : Devuelve conteos por estado para el dashboard del admin
+
+// GET /api/incidencias/:id : Devuelve una incidencia completa con comentarios e historial. Comprueba que el usuario tiene permiso para verla
+
+//PATCH /api/incidencias/:id/estado : Cambia el estado y registra el cambio en HistorialEstado automáticamente
+
+// POST /api/incidencias: Crea una incidencia. El creador y el estado inicial los asigna el servidor, no el frontend
+
+// PATCH /api/incidencias/:id/asignar: Asigna o desasigna un técnico. Solo admin
+
+// DELETE /api/incidencias/:id: Elimina la incidencia y en cascada sus comentarios e historial. Solo admin
+
 const express = require("express");
 const router = express.Router();
 const { body, validationResult } = require("express-validator");
@@ -14,9 +30,13 @@ const {
 } = require("../middlewares/authMiddleware");
 
 // ── GET / — filtrado según rol ───────────────────────────
+// Listar incidencias según rol
 router.get("/", verificarToken, async (req, res) => {
   try {
+    // Comprobamos el usuario que quiere acceder a esas incidencias
     const { rol, id } = req.usuario;
+
+    // Nos permite filtrar las incidencias por estado y prioridad
     const { estado, prioridad, id_usuario } = req.query;
 
     const where = {};
@@ -26,6 +46,8 @@ router.get("/", verificarToken, async (req, res) => {
     if (prioridad) where.prioridad = prioridad;
     if (rol === "admin" && id_usuario) where.id_creador = id_usuario;
 
+    // Obtenemos los datos de las incidencias:
+    // Creador, Tecnico, Categoria
     const incidencias = await Incidencia.findAll({
       where,
       include: [
@@ -56,6 +78,8 @@ router.get("/", verificarToken, async (req, res) => {
 });
 
 // ── GET /stats — solo admin ──────────────────────────────
+// Cuenta el numero total de incidencias Abiertas, En proceso, y Resueltas
+// Hace cuatro consultas de conteo a la BD.
 router.get(
   "/stats",
   verificarToken,
@@ -78,8 +102,10 @@ router.get(
 );
 
 // ── GET /:id ─────────────────────────────────────────────
+// Ver una incidencia concreta
 router.get("/:id", verificarToken, async (req, res) => {
   try {
+    // Trae la incidencia completa con sus comentarios e historial de estados
     const incidencia = await Incidencia.findByPk(req.params.id, {
       include: [
         {
@@ -125,6 +151,8 @@ router.get("/:id", verificarToken, async (req, res) => {
     if (!incidencia)
       return res.status(404).json({ error: "Incidencia no encontrada." });
 
+    // Comprobamos que el usuario tiene permiso para ver esa incidencia
+    // Aunque un empleado conozca el id de otra incidencia e intente acceder directamente por URL, aquí se le bloquea.
     const { rol, id } = req.usuario;
     if (rol === "empleado" && incidencia.id_creador !== id)
       return res
@@ -143,6 +171,7 @@ router.get("/:id", verificarToken, async (req, res) => {
 });
 
 // ── POST / ───────────────────────────────────────────────
+// Nos permite crear una incidencia
 router.post(
   "/",
   verificarToken,
@@ -162,6 +191,7 @@ router.post(
       const incidencia = await Incidencia.create({
         ...req.body,
         id_creador: req.usuario.id,
+        // El estado de la incidencia SIMPRE arranca como "abierta"
         estado: "abierta",
       });
 
@@ -181,6 +211,7 @@ router.post(
 );
 
 // ── PATCH /:id/estado — técnico o admin ──────────────────
+// Nos permite cambiar el estado de la incidencia y registrar el cambio de la misma
 router.patch(
   "/:id/estado",
   verificarToken,
@@ -200,6 +231,7 @@ router.patch(
       if (!incidencia)
         return res.status(404).json({ error: "Incidencia no encontrada." });
 
+      // Actualizamos el estado de la incidencia
       const estadoAnterior = incidencia.estado;
       const estadoNuevo = req.body.estado;
 
@@ -212,6 +244,7 @@ router.patch(
 
       await incidencia.update(updates);
 
+      // Creamos un registro en la tabla HistorialEstado con el estado anterior, el nuevo, quién lo cambió y cuándo.
       await HistorialEstado.create({
         id_incidencia: incidencia.id,
         id_usuario: req.usuario.id,
@@ -228,6 +261,7 @@ router.patch(
 );
 
 // ── PATCH /:id/asignar — solo admin ──────────────────────
+// Nos permite asignar una incidencia a un tecnico. Solo el admin.
 router.patch(
   "/:id/asignar",
   verificarToken,
@@ -247,6 +281,7 @@ router.patch(
 );
 
 // ── DELETE /:id — solo admin ─────────────────────────────
+// Nos permite eliminar incidencias. Solo el admin.
 router.delete(
   "/:id",
   verificarToken,

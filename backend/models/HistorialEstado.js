@@ -1,3 +1,4 @@
+// Le dice a 	Sequelize cómo es la tabla historial_estados y todo su comportamiento:
 const { DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {

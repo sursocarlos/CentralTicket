@@ -1,3 +1,5 @@
+// Componente de la barra de navegación del usuario
+
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   Ticket, LayoutDashboard, Users, Tag,
@@ -5,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
+// Define los links de navegación para cada rol en un objeto
 const NAV = {
   admin: [
     { to: '/admin', icon: LayoutDashboard, label: 'Panel' },
@@ -27,6 +30,8 @@ export default function Navbar() {
 
   const handleLogout = () => { logout(); navigate('/login'); };
   const links = NAV[user?.rol] || [];
+
+  // Genera las iniciales del nombre para el avatar. "Juan García" : "JG" 
   const initials = user?.nombre?.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?';
 
   return (

@@ -1,3 +1,7 @@
+// Define la estructura y las rutas de la app:
+// Envuelve todo en AuthProvider para que la sesión esté disponible globalmente
+// Todas las rutas privadas están protegidas con ProtectedRoute y su rol requerido
+
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -15,6 +19,11 @@ import MisIncidencias    from './pages/empleado/MisIncidencias';
 
 function AppRoutes() {
   return (
+    // RUTAS ESPECIALES:
+    // La ruta /login es la unica ruta pública, sin ProtectedRoute
+    // La ruta / redirige automáticamente al login
+    // La ruta * captura cualquier URL que no exista y muestra el 404
+
     <Routes>
       <Route path="/login" element={<Login />} />
 
@@ -51,6 +60,9 @@ function AppRoutes() {
 
 export default function App() {
   return (
+    // AuthProvider hace que el contexto de sesión esté disponible en toda la app
+    // BrowserRouter activa React Router para gestionar la navegación
+    // AppRoutes define todas las rutas
     <AuthProvider>
       <BrowserRouter>
         <AppRoutes />

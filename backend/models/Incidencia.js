@@ -1,3 +1,5 @@
+// Le dice a 	Sequelize cómo es la tabla incidencias y todo su comportamiento:
+
 const { DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {

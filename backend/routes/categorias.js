@@ -1,3 +1,17 @@
+// Este archivo gestiona todo lo relacionado con las categorias de las incidencias:
+
+// GET /api/categorias — Muestra todas las categorias ACTIVAS. Cualquier usuario autenticado.
+
+// GET /api/categorias/todas — Muestra todas las categorias, incluye inactivas. Solo ADMIN.
+
+// POST /api/categorias : Crear categorias. Solo ADMIN.
+
+// PUT /api/categorias/:id : Editar categoria. Solo ADMIN.
+
+// PATCH /api/categorias/:id/toggle — Activar/Desactivar categorias. Solo ADMIN.
+
+// DELETE /api/categorias/:id : Eliminar categorias. Solo ADMIN.
+
 const express = require("express");
 const router = express.Router();
 const { body, validationResult } = require("express-validator");
@@ -7,8 +21,7 @@ const {
   verificarRol,
 } = require("../middlewares/authMiddleware");
 
-// GET /api/categorias — todos los autenticados
-// GET /api/categorias/todas — solo admin, incluye inactivas
+// GET /api/categorias — Cualquier usuario autenticado. Devuelve solo las activas.
 router.get(
   "/todas",
   verificarToken,
@@ -39,6 +52,7 @@ router.get("/", verificarToken, async (req, res) => {
 });
 
 // POST /api/categorias — solo admin
+// Nos permite crear categorias
 router.post(
   "/",
   verificarToken,
@@ -62,6 +76,7 @@ router.post(
 );
 
 // PUT /api/categorias/:id — solo admin
+// Nos permite editar categorias
 router.put("/:id", verificarToken, verificarRol("admin"), async (req, res) => {
   try {
     const categoria = await Categoria.findByPk(req.params.id);
@@ -76,6 +91,7 @@ router.put("/:id", verificarToken, verificarRol("admin"), async (req, res) => {
 });
 
 // PATCH /api/categorias/:id/toggle — activar o desactivar
+// Nos permite desactivar categorias
 router.patch(
   "/:id/toggle",
   verificarToken,
@@ -100,6 +116,7 @@ router.patch(
 );
 
 // DELETE /api/categorias/:id — eliminación física permanente
+// Nos permite eliminar categorias
 router.delete(
   "/:id",
   verificarToken,

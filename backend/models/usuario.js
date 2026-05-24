@@ -1,3 +1,7 @@
+// Le dice a 	Sequelize cómo es la tabla usuarios y todo su comportamiento:
+// los campos que tiene, las validaciones de cada uno, el hasheo automático de contraseñas,
+// y dos métodos de utilidad para el login y para devolver el usuario sin la contraseña.
+
 const { DataTypes } = require("sequelize");
 const bcrypt = require("bcryptjs");
 
@@ -58,8 +62,10 @@ module.exports = (sequelize) => {
       timestamps: true,
       createdAt: "fecha_creacion",
       updatedAt: "fecha_actualizacion",
+
+      // Los hooks son funciones que Sequelize ejecuta automáticamente en ciertos momentos.
       hooks: {
-        // Hashea la contraseña automáticamente antes de guardar
+        // Hashea la contraseña automáticamente antes de guardar con bcrypt
         beforeCreate: async (usuario) => {
           if (usuario.password) {
             usuario.password = await bcrypt.hash(usuario.password, 12);
@@ -75,11 +81,14 @@ module.exports = (sequelize) => {
   );
 
   // Método de instancia para verificar contraseña
+  // Hashea la contraseña introducida por le usuario y la comparara con el
+  // hash de la base de datos
   Usuario.prototype.verificarPassword = async function (passwordPlano) {
     return bcrypt.compare(passwordPlano, this.password);
   };
 
   // Método para devolver usuario sin la contraseña
+  // Devuelve todos los datos del usuario menos la contraseña
   Usuario.prototype.toSafeJSON = function () {
     const { password, ...datos } = this.toJSON();
     return datos;

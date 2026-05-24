@@ -1,12 +1,19 @@
+// Gestiona los comentarios de las incidencia:
+
+// POST /api/comentarios : Crear comentarios, se comprueba el token del usuario.
+
+// DELETE /api/comentarios/:id : Eliminar comentarios, se comprueba que sea el autor del comentario, o un usuario administrador.
+
 const express = require("express");
 const router = express.Router();
 const { body, validationResult } = require("express-validator");
 const { Comentario, Usuario } = require("../models");
 const { verificarToken } = require("../middlewares/authMiddleware");
 
-// POST /api/comentarios — cualquier usuario autenticado
+// POST /api/comentarios : Crear comentarios
 router.post(
   "/",
+  // Verificamos el token para que sea imposible que alguien publique un comentario en nombre de otro usuario.
   verificarToken,
   [
     body("contenido")
@@ -22,12 +29,14 @@ router.post(
     }
 
     try {
+      // Creamos el comentario
       const comentario = await Comentario.create({
         contenido: req.body.contenido,
         id_incidencia: req.body.id_incidencia,
         id_usuario: req.usuario.id,
       });
 
+      // Hacemos una segunda consulta para devolver el comentario completo JUNTO CON LOS DATOS DEL AUTOR.
       const comentarioCompleto = await Comentario.findByPk(comentario.id, {
         include: [
           { model: Usuario, as: "autor", attributes: ["id", "nombre", "rol"] },
@@ -41,7 +50,7 @@ router.post(
   },
 );
 
-// DELETE /api/comentarios/:id — solo el autor o admin
+// DELETE /api/comentarios/:id : Permite eliminar los comentarios. Solo el autor o admin
 router.delete("/:id", verificarToken, async (req, res) => {
   try {
     const comentario = await Comentario.findByPk(req.params.id);

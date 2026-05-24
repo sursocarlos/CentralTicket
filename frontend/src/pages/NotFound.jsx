@@ -1,3 +1,8 @@
+// Muestra un mensaje de página no encontrada y un botón de volver.
+
+// El navigate(-1) es de React Router y simplemente lleva al usuario 
+// a la página anterior del historial, como el botón atrás del navegador.
+
 import { useNavigate } from 'react-router-dom';
 import { Ticket } from 'lucide-react';
 

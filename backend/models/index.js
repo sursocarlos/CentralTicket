@@ -1,5 +1,14 @@
+// Configura toda la capa de datos de la aplicación:
+// Realiza la conexión con la BD
+// Carga los modelos
+// Define las relaciones entre tablas
+// Sincroniza los modelos con la BD al arrancar
+// Exporta los modelos para que sean accesibles en todo el proyecto
+
 const { Sequelize } = require("sequelize");
 
+// Comprobamos que la URL de la base de datos es correcta.
+// Si no existe, lanza un error y para todo antes de intentar arrancar.
 const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
@@ -8,6 +17,7 @@ if (!databaseUrl) {
   );
 }
 
+// Crea la instancia de Sequelize que usará toda la aplicación.
 const sequelize = new Sequelize(databaseUrl, {
   dialect: "postgres",
   logging: false,
@@ -27,6 +37,9 @@ const Comentario = require("./Comentario")(sequelize);
 const HistorialEstado = require("./HistorialEstado")(sequelize);
 
 // ── Asociaciones ─────────────────────────────────────────
+// Aqui le decimos a Sequelize cómo se relacionan las tablas entre sí.
+// hasMany → "tiene muchos"
+// belongsTo → "pertenece a"
 
 // Usuario ↔ Incidencia
 Usuario.hasMany(Incidencia, {
@@ -110,6 +123,9 @@ HistorialEstado.belongsTo(Usuario, {
 });
 
 // ── Funciones de utilidad ────────────────────────────────
+// Intentamos conectarnos a la base de datos
+// Devuelve true si funciona y false si no.
+// Usamos /api/status
 const testConnection = async () => {
   try {
     await sequelize.authenticate();
@@ -121,6 +137,9 @@ const testConnection = async () => {
   }
 };
 
+// Comprobamos que la base de datos este sincronizada
+// Comprobamos que todas las tablas y comlumnas existen
+// en la BD y las creamos si falta alguna.
 const syncDatabase = async () => {
   try {
     await sequelize.query(`
@@ -155,6 +174,8 @@ const syncDatabase = async () => {
   }
 };
 
+// Exportamos los modelos y funciones para poder usarlos
+// desde cualquier otro archivo del proyecto.
 module.exports = {
   sequelize,
   Usuario,

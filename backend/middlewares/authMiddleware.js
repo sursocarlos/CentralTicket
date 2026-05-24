@@ -1,7 +1,11 @@
+// Se encarga de comprobar 2 cosas mediante dos middlewares de seguridad:
+// verificarToken: Comprueba que la petición lleva un token JWT válido, que no ha expirado, y que el usuario sigue existiendo y activo en la BD.
+// verificarRol: Comprueba que el usuario autenticado tiene el rol necesario para acceder a ese endpoint.
+
 const jwt = require("jsonwebtoken");
 const { Usuario } = require("../models");
 
-// Verifica que el token JWT sea válido
+// Verifica que el token JWT sea válido y no ha expirado
 const verificarToken = async (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1]; // "Bearer <token>"
@@ -42,9 +46,11 @@ const verificarToken = async (req, res, next) => {
 const verificarRol = (...rolesPermitidos) => {
   return (req, res, next) => {
     if (!req.usuario) {
+      // 401 significa que no estás autenticado, es decir, no has iniciado sesión o tu token no es válido.
       return res.status(401).json({ error: "No autenticado." });
     }
     if (!rolesPermitidos.includes(req.usuario.rol)) {
+      // 403 significa que estás autenticado pero no tienes permisos para hacer eso.
       return res.status(403).json({
         error: `Acceso denegado. Se requiere rol: ${rolesPermitidos.join(" o ")}.`,
       });

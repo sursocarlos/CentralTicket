@@ -1,3 +1,8 @@
+// Si el usuario ya tiene sesión activa lo redirige directamente a su panel
+// Manda las credenciales al backend y si son correctas guarda la sesión y redirige según el rol
+// Muestra el error del backend si el login falla
+// El botón se desactiva mientras espera respuesta para evitar doble envío
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Ticket, Mail, Lock, Eye, EyeOff, Sun, Moon } from 'lucide-react';
@@ -20,6 +25,7 @@ export default function Login() {
     if (user) navigate(HOME[user.rol] || '/', { replace: true });
   }, [user, navigate]);
 
+  // Este metodo lanza la 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');

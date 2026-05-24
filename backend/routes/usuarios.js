@@ -1,3 +1,15 @@
+// Este archivo gestiona todo lo relacionado con la gestión de usuarios:
+
+// GET /api/usuarios : Obtiene la lista completa de usuarios
+
+// GET /api/usuarios/tecnicos: Obtiene la lista de tecnicos
+
+// PUT /api/usuarios/:id : Modificar usuarios
+
+// PATCH /api/usuarios/:id/toggle : Activar/Desactivar usuarios
+
+// DELETE /api/usuarios/:id : Eliminar usuarios
+
 const express = require("express");
 const router = express.Router();
 const { body, validationResult } = require("express-validator");
@@ -7,9 +19,12 @@ const {
   verificarRol,
 } = require("../middlewares/authMiddleware");
 
-// GET /api/usuarios — solo admin
+// GET /api/usuarios — solo admin: Listar todos los usuarios
+// Vista general del usuaario admin
 router.get("/", verificarToken, verificarRol("admin"), async (req, res) => {
   try {
+    // Hacemos una consulta para traernos todos los usuarios ordenados por fecha de creación.
+    // Excluimos la contraseña del usuario
     const usuarios = await Usuario.findAll({
       attributes: { exclude: ["password"] },
       order: [["fecha_creacion", "DESC"]],
@@ -20,9 +35,11 @@ router.get("/", verificarToken, verificarRol("admin"), async (req, res) => {
   }
 });
 
-// GET /api/usuarios/tecnicos
+// GET /api/usuarios/tecnicos: Listar técnicos activos
+// Formulario de crear/editar incidencias para mostrar el desplegable de técnicos disponibles
 router.get("/tecnicos", verificarToken, async (req, res) => {
   try {
+    // Comprobamos el token del usuario
     const tecnicos = await Usuario.findAll({
       where: { rol: "tecnico", activo: true },
       attributes: ["id", "nombre", "email"],
@@ -33,7 +50,8 @@ router.get("/tecnicos", verificarToken, async (req, res) => {
   }
 });
 
-// PUT /api/usuarios/:id — editar
+// PUT /api/usuarios/:id — editar usuario
+// Sino se modifica un campo se queda tal y como estaba
 router.put(
   "/:id",
   verificarToken,
@@ -84,6 +102,7 @@ router.patch(
       if (!usuario)
         return res.status(404).json({ error: "Usuario no encontrado." });
 
+      // Comprobamos el usuario que esta realizando la acción para que el admin no se pueda desactivar a si mismo
       if (usuario.id === req.usuario.id)
         return res
           .status(400)
@@ -110,7 +129,7 @@ router.delete(
       const usuario = await Usuario.findByPk(req.params.id);
       if (!usuario)
         return res.status(404).json({ error: "Usuario no encontrado." });
-
+      // Comprobamos el usuario que esta realizando la acción para que el admin no se pueda eliminarse a si mismo
       if (usuario.id === req.usuario.id)
         return res
           .status(400)
